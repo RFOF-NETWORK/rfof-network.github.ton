@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "multi_spark_tokenizer_python_paket"
+version = "0.0.1"
+description = "PRAIAI Tokenizer Package - Copilot powered Python tokenizers"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "RFOF-NETWORK", email = "rfof@network.org"}
+]
+keywords = ["tokenizer", "llm", "nlp", "copilot", "praiai"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+
+[project.urls]
+Homepage = "https://github.com/RFOF-NETWORK/rfof-network.github.ton"
+Repository = "https://github.com/RFOF-NETWORK/rfof-network.github.ton.git"
