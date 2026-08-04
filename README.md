@@ -9,7 +9,7 @@ Sonderzeichen) in etwas umwandeln, mit dem sie rechnen können.
 
 | Datei | Was sie zeigt |
 |---|---|
-| `eigener_tokenizer.py` | Zeichen-Tokenizer: jedes Zeichen = eine Zahl (ID) |
+| `tokenizer.py` | Zeichen-Tokenizer: jedes Zeichen = eine Zahl (ID) |
 | `bpe_tokenizer.py` | BPE-Tokenizer: das Verfahren, das echte LLMs (GPT, Llama, ...) nutzen |
 
 ## Grundkonzepte
