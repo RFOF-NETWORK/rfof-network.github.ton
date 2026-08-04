@@ -11,7 +11,7 @@ Sonderzeichen) in etwas umwandeln, mit dem sie rechnen können.
 
 | Datei | Was sie zeigt |
 |---|---|
-| `tokenizer.py` | Zeichen-Tokenizer: jedes Zeichen = eine Zahl (ID) |
+| `char_tokenizer.py` | Zeichen-Tokenizer: jedes Zeichen = eine Zahl (ID) |
 | `bpe_tokenizer.py` | BPE-Tokenizer: das Verfahren, das echte LLMs (GPT, Llama, ...) nutzen |
 
 ## Grundkonzepte
@@ -26,7 +26,7 @@ Sonderzeichen) in etwas umwandeln, mit dem sie rechnen können.
 ## Ausführen
 
 ```bash
-python3 eigener_tokenizer.py
+python3 char_tokenizer.py
 python3 bpe_tokenizer.py
 ```
 
