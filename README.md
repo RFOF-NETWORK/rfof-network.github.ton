@@ -1,5 +1,5 @@
 # rfof-network.github.ton
-PRAIAI[Copilot(PRAI[Gemini/GoogleAI{Deepseak}]GPT) #BlueDeepGold macht alles nutzbar in GitHub von RFOF-NETWORK.
+PRAIAI[Copilot(PRAI[Gemini/GoogleAI{Deepseek}]GPT) #BlueDeepGold macht alles nutzbar in GitHub von RFOF-NETWORK.
 Mit eigener Python Paket Reihe v0.0.1 [multi_spark_tokenizer_python_paket](https://github.com/RFOF-NETWORK/rfof-network.github.ton/new/main?filename=.github%2Fworkflows%2Fpython-publish.yml&workflow_template=ci%2Fpython-publish)
 
 # Mein Tokenizer-Projekt
