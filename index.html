@@ -437,6 +437,11 @@
 
         /* ── Top-nav login badge compact ── */
         .nav-login-badge { font-size: 0.8rem; padding: 3px 10px; border-radius: 8px; background: var(--surface-strong); border: 1px solid var(--border); white-space: nowrap; }
+        .chat-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; max-height: 360px; overflow: auto; }
+        .chat-entry { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; background: var(--surface); }
+        .chat-entry.user { border-color: rgba(99, 102, 241, 0.35); }
+        .chat-entry.assistant { border-color: rgba(16, 185, 129, 0.35); }
+        .chat-entry strong { display: block; margin-bottom: 4px; }
     </style>
 
     <!-- ── CDN Libraries ── -->
@@ -454,6 +459,7 @@
             <button type="button" id="navExplorer" class="secondary" hidden>🔍 Explorer</button>
             <button type="button" id="navRapp" class="secondary" hidden>🛒 rApp Store</button>
             <button type="button" id="navMtkNec" class="secondary" hidden>💱 MTK/NEC</button>
+            <button type="button" id="navChat" class="secondary" hidden>🤖 PRAIAI Chat</button>
             <button type="button" id="navSettings" class="secondary" hidden>⚙️ Settings</button>
             <button type="button" id="navAdmin" class="secondary" hidden>🛡️ Admin</button>
             <span class="nav-sep"></span>
@@ -786,6 +792,27 @@
             <div id="walletActionContent"></div>
         </div>
     </div>
+
+    <!-- ──────────────────────────────────────────────────────────────────── -->
+    <!-- ── Chat Section ──────────────────────────────────────────────────── -->
+    <section id="chatSection" class="panel" style="display:none;margin-top:24px;">
+        <h2>🤖 PRAIAI Chat</h2>
+        <p>Lokaler Chat-Flow mit Rollen-Quota (Admin unbegrenzt, User mit Tageslimit) und stiller Autonomie-Erkennung.</p>
+        <div class="stats" style="margin-top:10px;">
+            <div><strong>Verbrauch</strong><p id="chatUsageText">-</p></div>
+            <div><strong>Limit</strong><p id="chatLimitText">-</p></div>
+        </div>
+        <ul id="chatList" class="chat-list" aria-live="polite" style="margin-top:12px;"></ul>
+        <form id="chatForm" class="form-grid stack" style="margin-top:12px;" novalidate>
+            <label for="chatInput">Nachricht</label>
+            <textarea id="chatInput" maxlength="8000" placeholder="Schreibe an PRAIAI …"></textarea>
+            <div class="button-row">
+                <button id="chatSendButton" type="submit">Senden</button>
+                <button id="chatRefreshButton" type="button" class="secondary">Aktualisieren</button>
+            </div>
+        </form>
+        <p id="chatAutonomyHint" class="oauth-helper">Silent-Autonomy: -</p>
+    </section>
 
     <!-- ──────────────────────────────────────────────────────────────────── -->
     <!-- ── Wallet Section ────────────────────────────────────────────────── -->
@@ -1143,6 +1170,14 @@
             secureNoteInput: document.getElementById('secureNoteInput'),
             noteCsrf: document.getElementById('noteCsrf'),
             passwordCsrf: document.getElementById('passwordCsrf'),
+            chatForm: document.getElementById('chatForm'),
+            chatInput: document.getElementById('chatInput'),
+            chatSendButton: document.getElementById('chatSendButton'),
+            chatRefreshButton: document.getElementById('chatRefreshButton'),
+            chatList: document.getElementById('chatList'),
+            chatUsageText: document.getElementById('chatUsageText'),
+            chatLimitText: document.getElementById('chatLimitText'),
+            chatAutonomyHint: document.getElementById('chatAutonomyHint'),
             logList: document.getElementById('logList'),
             userStats: document.getElementById('userStats'),
             userList: document.getElementById('userList'),
@@ -1224,6 +1259,43 @@
                 elements.userStats.textContent = 'Keine Admin-Ansicht aktiv.';
                 return;
             }
+
+            function renderChat(session) {
+                elements.chatList.replaceChildren();
+                if (!session) {
+                    elements.chatUsageText.textContent = '-';
+                    elements.chatLimitText.textContent = '-';
+                    elements.chatAutonomyHint.textContent = 'Silent-Autonomy: keine aktive Session.';
+                    return;
+                }
+                const messages = auth.getChatMessages(session.csrfToken);
+                const usage = auth.getChatUsage(session.csrfToken);
+                const autonomyEvents = auth.getAutonomyEvents(session.csrfToken);
+                if (!messages.length) {
+                    const empty = document.createElement('li');
+                    empty.className = 'chat-entry assistant';
+                    empty.textContent = 'Noch keine Chat-Nachrichten.';
+                    elements.chatList.append(empty);
+                } else {
+                    messages.forEach((entry) => {
+                        const item = document.createElement('li');
+                        item.className = `chat-entry ${entry.role === 'user' ? 'user' : 'assistant'}`;
+                        const title = document.createElement('strong');
+                        title.textContent = entry.role === 'user' ? 'Du' : 'PRAIAI';
+                        const content = document.createElement('span');
+                        content.textContent = entry.content;
+                        item.append(title, content);
+                        elements.chatList.append(item);
+                    });
+                }
+                elements.chatUsageText.textContent = `${usage.usedMessages} Nachrichten · ${usage.usedTokens} Tokens`;
+                elements.chatLimitText.textContent = usage.unlimited
+                    ? 'Unbegrenzt (Admin)'
+                    : `${usage.remainingMessages} Nachrichten / ${usage.remainingTokens} Tokens übrig`;
+                elements.chatAutonomyHint.textContent = autonomyEvents.length
+                    ? `Silent-Autonomy: ${autonomyEvents[0].username ? `${autonomyEvents[0].username} · ` : ''}${autonomyEvents[0].summary || autonomyEvents[0].topic}`
+                    : 'Silent-Autonomy: keine aktuellen Signale.';
+            }
             elements.userStats.textContent = `${users.length} Nutzer insgesamt.`;
             users.forEach((user) => {
                 const entry = document.createElement('li');
@@ -1302,6 +1374,7 @@
                 elements.userStats.textContent = '-';
                 elements.userList.replaceChildren();
                 renderLogs();
+                renderChat(null);
                 if (typeof updateNavBar === 'function') { updateNavBar(null); }
                 return;
             }
@@ -1315,6 +1388,7 @@
             elements.secureNoteState.textContent = session.secureNoteConfigured ? 'Verschlüsselt gespeichert' : 'Nicht gesetzt';
             renderLogs();
             renderUserOverview();
+            renderChat(session);
             updateSessionCountdown();
             // Update top navigation state
             if (typeof updateNavBar === 'function') { updateNavBar(session); }
@@ -1472,6 +1546,24 @@
             });
         });
 
+        elements.chatForm?.addEventListener('submit', (event) => {
+            event.preventDefault();
+            withLoading(elements.chatSendButton, async () => {
+                const session = auth.getSessionSummary();
+                if (!session?.csrfToken) {
+                    throw new Error('Keine aktive Session für Chat vorhanden.');
+                }
+                auth.sendChatMessage(elements.chatInput.value, session.csrfToken);
+                elements.chatInput.value = '';
+                renderSession();
+            });
+        });
+
+        elements.chatRefreshButton?.addEventListener('click', () => {
+            const session = auth.getSessionSummary();
+            renderChat(session);
+        });
+
         ['click', 'keydown', 'mousemove', 'touchstart'].forEach((eventName) => {
             document.addEventListener(eventName, touchAuthenticatedSession, { passive: true });
         });
@@ -1485,13 +1577,13 @@
 
         // ─── Helper: show/hide main views ─────────────────────────────────
 
-        const VIEWS = ['loginArea', 'walletSection', 'settingsSection',
+        const VIEWS = ['loginArea', 'walletSection', 'chatSection', 'settingsSection',
                        'explorerSection', 'rappSection', 'mtkNecSection', 'dashboard', 'adminPanel'];
 
         function showView(name) {
             const loginArea = document.querySelector('.grid');  // login+notice grid
             if (loginArea) loginArea.style.display = name === 'loginArea' ? '' : 'none';
-            ['walletSection','settingsSection','explorerSection','rappSection','mtkNecSection'].forEach((id) => {
+            ['walletSection','chatSection','settingsSection','explorerSection','rappSection','mtkNecSection'].forEach((id) => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = id === name ? '' : 'none';
             });
@@ -1505,7 +1597,7 @@
 
         function updateNavBar(session) {
             const loggedIn = Boolean(session);
-            ['navHome','navWallet','navExplorer','navRapp','navMtkNec','navSettings','navAdmin'].forEach((id) => {
+            ['navHome','navWallet','navExplorer','navRapp','navMtkNec','navChat','navSettings','navAdmin'].forEach((id) => {
                 const btn = document.getElementById(id);
                 if (btn) btn.hidden = !loggedIn;
             });
@@ -1522,6 +1614,7 @@
         document.getElementById('navExplorer')?.addEventListener('click', () => { showView('explorerSection'); renderExplorer(); });
         document.getElementById('navRapp')?.addEventListener('click', () => { showView('rappSection'); renderRappStore('rappRowMain', ''); });
         document.getElementById('navMtkNec')?.addEventListener('click', () => { showView('mtkNecSection'); initMtkNecSection(); });
+        document.getElementById('navChat')?.addEventListener('click', () => { showView('chatSection'); renderSession(); });
         document.getElementById('navSettings')?.addEventListener('click', () => { showView('settingsSection'); renderSettingsState(); });
         document.getElementById('navAdmin')?.addEventListener('click', () => { showView('adminPanel'); });
         document.getElementById('navLogin')?.addEventListener('click', () => showView('loginArea'));

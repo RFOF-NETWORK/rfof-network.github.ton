@@ -332,6 +332,52 @@ test('unlinkOAuth2Account removes provider link', async () => {
     assert.equal(Object.keys(remaining).includes('github'), false);
 });
 
+test('chat quota enforces daily message limit for normal users', async () => {
+    const storage = createMemoryStorage();
+    const auth = new AuthManager({
+        storage,
+        now: () => 1_700_000_000_000,
+        chatUserDailyMessageLimit: 1,
+        chatUserDailyTokenLimit: 500,
+        chatUserInputCharLimit: 200
+    });
+    await auth.register('quota.admin', 'Sicher!2026', 'Sicher!2026');
+    auth.clearSession();
+    const { session } = await auth.register('quota.user', 'Sicher!2026', 'Sicher!2026');
+    auth.sendChatMessage('Hallo PRAIAI', session.csrfToken);
+    assert.throws(
+        () => auth.sendChatMessage('Zweite Nachricht', session.csrfToken),
+        /Tageslimit für Nachrichten erreicht/
+    );
+    const usage = auth.getChatUsage(session.csrfToken);
+    assert.equal(usage.usedMessages, 1);
+});
+
+test('chat quota is unlimited for admin users', async () => {
+    const storage = createMemoryStorage();
+    const auth = new AuthManager({
+        storage,
+        now: () => 1_700_000_000_000,
+        chatUserDailyMessageLimit: 1
+    });
+    const { session } = await auth.register('chat.admin', 'Sicher!2026', 'Sicher!2026');
+    auth.sendChatMessage('Admin Nachricht 1', session.csrfToken);
+    auth.sendChatMessage('Admin Nachricht 2', session.csrfToken);
+    const usage = auth.getChatUsage(session.csrfToken);
+    assert.equal(usage.unlimited, true);
+    assert.equal(usage.usedMessages, 2);
+});
+
+test('silent autonomy stores topic hints after chat messages', async () => {
+    const storage = createMemoryStorage();
+    const auth = new AuthManager({ storage, now: () => 1_700_000_000_000 });
+    const { session } = await auth.register('autonomy.user', 'Sicher!2026', 'Sicher!2026');
+    auth.sendChatMessage('Bitte hilf mir beim wallet swap', session.csrfToken);
+    const events = auth.getAutonomyEvents(session.csrfToken);
+    assert.equal(events.length > 0, true);
+    assert.equal(events[0].topic, 'wallet');
+});
+
 // ─── Navigation / RBAC Tests ──────────────────────────────────────────────────
 
 test('navigateToHome requires active session', async () => {
