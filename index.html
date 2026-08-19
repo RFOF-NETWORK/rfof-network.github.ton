@@ -493,7 +493,7 @@
                 <div class="split" style="justify-content: space-between; align-items: center;">
                     <div>
                         <h2>Benutzerzugang</h2>
-                        <p>OAuth2-Demo (GitHub/Google/Microsoft) plus System-Account Login/Registrierung ohne Backend.</p>
+                        <p>OAuth2 (GitHub/Google/Microsoft) plus System-Account Login/Registrierung. Trage Client-IDs in Einstellungen → Verknüpfte Accounts ein für echtes OAuth2.</p>
                     </div>
                     <div class="status-badge"><span id="sessionDot" class="dot"></span><span id="sessionState">Nicht angemeldet</span></div>
                 </div>
@@ -513,7 +513,7 @@
                     </button>
                 </div>
                 <p class="oauth-helper">Wenn du keinen OAuth2-Button nutzt, verwende <strong>System Account</strong> zum Registrieren oder Einloggen.</p>
-                <p id="oauthCallbackState" class="oauth-helper">OAuth2 Callback-Handler: bereit (Demo-Modus, kein Token-Austausch ohne Backend).</p>
+                <p id="oauthCallbackState" class="oauth-helper">OAuth2: Bereit. Klicke einen Provider-Button für echtes OAuth2-Login.</p>
 
                 <div class="tab-row" style="margin-top: 18px;">
                     <button id="showLogin" type="button" class="active">System Account Login</button>
@@ -943,6 +943,39 @@
         <div class="tab-pane" id="settingsOauth">
             <p>Verknüpfte OAuth2-Provider:</p>
             <ul id="oauthProviderList" style="list-style:none;padding:0;display:grid;gap:8px;"></ul>
+            <h3 style="margin-top:18px;margin-bottom:8px;">⚙️ OAuth2 Client-IDs konfigurieren</h3>
+            <p style="font-size:0.85rem;color:var(--muted);margin-bottom:12px;">
+                Trage hier die Client-IDs deiner OAuth2-Apps ein. Sie werden sicher in deinem Browser gespeichert.
+                Redirect-URI: <code id="oauthRedirectUriDisplay">–</code>
+            </p>
+            <div class="form-grid stack" style="max-width:480px;">
+                <div>
+                    <label for="oauthClientIdGithub">GitHub Client-ID</label>
+                    <input id="oauthClientIdGithub" type="text" autocomplete="off" maxlength="64" placeholder="Ghxxxxxxxxxxxx">
+                </div>
+                <div>
+                    <label for="oauthClientIdGoogle">Google Client-ID</label>
+                    <input id="oauthClientIdGoogle" type="text" autocomplete="off" maxlength="128" placeholder="xxxx.apps.googleusercontent.com">
+                </div>
+                <div>
+                    <label for="oauthClientIdMicrosoft">Microsoft Application-ID (Client-ID)</label>
+                    <input id="oauthClientIdMicrosoft" type="text" autocomplete="off" maxlength="64" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+                </div>
+                <button type="button" id="oauthSaveClientIds">Speichern</button>
+                <p id="oauthClientIdStatus" class="oauth-helper" style="margin-top:4px;"></p>
+            </div>
+            <details style="margin-top:16px;">
+                <summary style="cursor:pointer;font-weight:600;font-size:0.88rem;">📖 Anleitung: OAuth2-App erstellen</summary>
+                <div style="font-size:0.82rem;color:var(--muted);margin-top:8px;line-height:1.6;">
+                    <p><strong>GitHub:</strong> Settings → Developer settings → OAuth Apps → New OAuth App<br>
+                    Homepage URL: <code>https://RFOF-NETWORK.github.io/rfof-network.github.ton/</code><br>
+                    Authorization callback URL: (gleiche URL)</p>
+                    <p><strong>Google:</strong> console.cloud.google.com → APIs &amp; Services → Credentials → Create OAuth 2.0 Client ID<br>
+                    Authorized redirect URIs: (gleiche URL)</p>
+                    <p><strong>Microsoft:</strong> portal.azure.com → App registrations → New registration<br>
+                    Redirect URI: Single-page application → (gleiche URL)</p>
+                </div>
+            </details>
         </div>
     </section>
 
@@ -1119,6 +1152,8 @@
 
     <!-- ── RFOF Wallet Core Extension ── -->
     <script type="module" src="./wallet-core.js"></script>
+    <!-- ── RFOF AI Chat (SPARK Tokenizer) ── -->
+    <script type="module" src="./ai-chat.js"></script>
     <script type="module">
         import { AuthManager, authConfig, passwordStrength } from './auth.js';
         import {
@@ -1145,6 +1180,12 @@
             oauthGoogle: document.getElementById('oauthGoogle'),
             oauthMicrosoft: document.getElementById('oauthMicrosoft'),
             oauthCallbackState: document.getElementById('oauthCallbackState'),
+            oauthClientIdGithub: document.getElementById('oauthClientIdGithub'),
+            oauthClientIdGoogle: document.getElementById('oauthClientIdGoogle'),
+            oauthClientIdMicrosoft: document.getElementById('oauthClientIdMicrosoft'),
+            oauthSaveClientIds: document.getElementById('oauthSaveClientIds'),
+            oauthClientIdStatus: document.getElementById('oauthClientIdStatus'),
+            oauthRedirectUriDisplay: document.getElementById('oauthRedirectUriDisplay'),
             loginForm: document.getElementById('loginForm'),
             registerForm: document.getElementById('registerForm'),
             registerPassword: document.getElementById('registerPassword'),
@@ -1321,23 +1362,40 @@
             URL.revokeObjectURL(url);
         }
 
-        async function startOAuthDemoFlow(provider) {
-            const stateToken = auth.createOAuthState(provider);
+        const OAUTH_CLIENT_ID_KEYS = {
+            github: 'rfof_oauth_client_id_github',
+            google: 'rfof_oauth_client_id_google',
+            microsoft: 'rfof_oauth_client_id_microsoft'
+        };
+
+        function getOAuthClientId(provider) {
+            return localStorage.getItem(OAUTH_CLIENT_ID_KEYS[provider] || '') || '';
+        }
+
+        async function startOAuthFlow(provider) {
+            const clientId = getOAuthClientId(provider);
             const redirectUri = `${window.location.origin}${window.location.pathname}`;
+
+            if (!clientId) {
+                showBanner('info', `Keine Client-ID für ${provider} konfiguriert. Bitte in Einstellungen → Verknüpfte Accounts eintragen.`);
+                elements.oauthCallbackState.textContent = `${provider}: Client-ID fehlt. Bitte in Einstellungen konfigurieren.`;
+                return;
+            }
+
+            const stateToken = auth.createOAuthState(provider);
             const authUrl = auth.buildOAuthAuthorizationUrl(provider, {
+                clientId,
                 redirectUri,
                 state: stateToken
             });
-            elements.oauthCallbackState.textContent = `${provider} OAuth2 Redirect vorbereitet: ${authUrl}`;
-            await new Promise((resolve) => window.setTimeout(resolve, 250));
-            const callbackParams = new URLSearchParams({
-                oauth_provider: provider,
-                code: `demo-${provider}-${Date.now()}`,
-                state: stateToken
-            });
-            const callbackUrl = `${window.location.pathname}?${callbackParams.toString()}`;
-            window.history.replaceState({}, '', callbackUrl);
-            await handleOAuthCallbackFromUrl();
+            elements.oauthCallbackState.textContent = `${provider} OAuth2 Redirect wird initiiert…`;
+            // Navigate to the real provider login page
+            window.location.href = authUrl;
+        }
+
+        // Keep legacy name for any external references
+        async function startOAuthDemoFlow(provider) {
+            return startOAuthFlow(provider);
         }
 
         async function handleOAuthCallbackFromUrl() {
@@ -1441,23 +1499,56 @@
         elements.registerPassword.addEventListener('input', updatePasswordMeter);
         elements.oauthGithub.addEventListener('click', () => {
             withLoading(elements.oauthGithub, async () => {
-                await startOAuthDemoFlow('github');
+                await startOAuthFlow('github');
             });
         });
         elements.oauthGoogle.addEventListener('click', () => {
             withLoading(elements.oauthGoogle, async () => {
-                await startOAuthDemoFlow('google');
+                await startOAuthFlow('google');
             });
         });
         elements.oauthMicrosoft.addEventListener('click', () => {
             withLoading(elements.oauthMicrosoft, async () => {
-                await startOAuthDemoFlow('microsoft');
+                await startOAuthFlow('microsoft');
             });
         });
 
         elements.themeToggle.addEventListener('click', () => {
             const nextTheme = state.theme === 'light' ? 'dark' : state.theme === 'dark' ? '' : 'light';
             setTheme(nextTheme);
+        });
+
+        // OAuth Client-ID save
+        if (elements.oauthRedirectUriDisplay) {
+            elements.oauthRedirectUriDisplay.textContent =
+                `${window.location.origin}${window.location.pathname}`;
+        }
+        if (elements.oauthClientIdGithub) {
+            elements.oauthClientIdGithub.value =
+                localStorage.getItem('rfof_oauth_client_id_github') || '';
+        }
+        if (elements.oauthClientIdGoogle) {
+            elements.oauthClientIdGoogle.value =
+                localStorage.getItem('rfof_oauth_client_id_google') || '';
+        }
+        if (elements.oauthClientIdMicrosoft) {
+            elements.oauthClientIdMicrosoft.value =
+                localStorage.getItem('rfof_oauth_client_id_microsoft') || '';
+        }
+        elements.oauthSaveClientIds?.addEventListener('click', () => {
+            const gh = (elements.oauthClientIdGithub?.value || '').trim();
+            const go = (elements.oauthClientIdGoogle?.value || '').trim();
+            const ms = (elements.oauthClientIdMicrosoft?.value || '').trim();
+            if (gh) { localStorage.setItem('rfof_oauth_client_id_github', gh); }
+            else { localStorage.removeItem('rfof_oauth_client_id_github'); }
+            if (go) { localStorage.setItem('rfof_oauth_client_id_google', go); }
+            else { localStorage.removeItem('rfof_oauth_client_id_google'); }
+            if (ms) { localStorage.setItem('rfof_oauth_client_id_microsoft', ms); }
+            else { localStorage.removeItem('rfof_oauth_client_id_microsoft'); }
+            if (elements.oauthClientIdStatus) {
+                elements.oauthClientIdStatus.textContent =
+                    '✅ Client-IDs gespeichert. OAuth2-Buttons sind jetzt aktiv.';
+            }
         });
 
         elements.loginForm.addEventListener('submit', (event) => {
