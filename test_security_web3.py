@@ -2,6 +2,7 @@
 
 import os
 import tempfile
+from urllib.parse import parse_qs, urlparse
 
 from auth import BasicAuthManager, build_github_oauth2, build_google_oauth2, issue_jwt, verify_jwt
 from config import load_config
@@ -60,10 +61,16 @@ def test_oauth2_builders():
     google_url = google.authorization_url(state="xyz")
     github_url = github.authorization_url(state="xyz")
 
-    assert "accounts.google.com" in google_url
-    assert "github.com/login/oauth/authorize" in github_url
-    assert "state=xyz" in google_url
-    assert "state=xyz" in github_url
+    google_parts = urlparse(google_url)
+    github_parts = urlparse(github_url)
+    google_query = parse_qs(google_parts.query)
+    github_query = parse_qs(github_parts.query)
+
+    assert google_parts.netloc == "accounts.google.com"
+    assert github_parts.netloc == "github.com"
+    assert github_parts.path == "/login/oauth/authorize"
+    assert google_query.get("state") == ["xyz"]
+    assert github_query.get("state") == ["xyz"]
 
 
 def test_config_load_from_env_file():
