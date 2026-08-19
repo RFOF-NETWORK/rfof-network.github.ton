@@ -159,6 +159,35 @@
         button.secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
         button.danger { background: linear-gradient(135deg, #ef4444, #b91c1c); }
 
+        .oauth-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .oauth-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            background: var(--surface-strong);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .oauth-button svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .oauth-helper {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: var(--muted);
+        }
+
         .grid {
             display: grid;
             grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
@@ -313,6 +342,7 @@
         @media (max-width: 920px) {
             .grid { grid-template-columns: 1fr; }
             .form-grid { grid-template-columns: 1fr; }
+            .oauth-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -345,14 +375,31 @@
                 <div class="split" style="justify-content: space-between; align-items: center;">
                     <div>
                         <h2>Benutzerzugang</h2>
-                        <p>Registrierung, Login, Session-Refresh und Auto-Logout ohne Backend.</p>
+                        <p>OAuth2-Demo (GitHub/Google/Microsoft) plus System-Account Login/Registrierung ohne Backend.</p>
                     </div>
                     <div class="status-badge"><span id="sessionDot" class="dot"></span><span id="sessionState">Nicht angemeldet</span></div>
                 </div>
 
+                <div class="oauth-grid" aria-label="OAuth2 Provider Auswahl">
+                    <button id="oauthGithub" type="button" class="oauth-button secondary">
+                        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.65 0 8.15c0 3.6 2.29 6.66 5.47 7.74.4.08.55-.18.55-.39 0-.2-.01-.86-.01-1.57-2.01.38-2.53-.5-2.69-.95-.09-.24-.48-.95-.82-1.14-.28-.16-.68-.55-.01-.56.63-.01 1.08.59 1.23.83.72 1.23 1.86.88 2.31.67.07-.54.28-.88.5-1.08-1.78-.21-3.64-.92-3.64-4.08 0-.9.31-1.64.82-2.22-.08-.21-.36-1.05.08-2.19 0 0 .67-.22 2.2.85.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.07 2.2-.85 2.2-.85.44 1.14.16 1.98.08 2.19.51.58.82 1.32.82 2.22 0 3.17-1.87 3.87-3.65 4.08.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.14.47.55.39A8.17 8.17 0 0 0 16 8.15C16 3.65 12.42 0 8 0Z"/></svg>
+                        GitHub
+                    </button>
+                    <button id="oauthGoogle" type="button" class="oauth-button secondary">
+                        <svg viewBox="0 0 18 18" aria-hidden="true"><path fill="#EA4335" d="M9 7.2v3.7h5.3c-.2 1.2-1.4 3.6-5.3 3.6-3.2 0-5.7-2.6-5.7-5.8s2.5-5.8 5.7-5.8c1.8 0 3 .8 3.7 1.5l2.5-2.4C13.6.9 11.5 0 9 0 4 0 0 4 0 9s4 9 9 9c5.2 0 8.6-3.6 8.6-8.7 0-.6-.1-1.1-.2-1.6H9Z"/></svg>
+                        Google
+                    </button>
+                    <button id="oauthMicrosoft" type="button" class="oauth-button secondary">
+                        <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="#F35325" d="M0 0h7v7H0z"/><path fill="#81BC06" d="M9 0h7v7H9z"/><path fill="#05A6F0" d="M0 9h7v7H0z"/><path fill="#FFBA08" d="M9 9h7v7H9z"/></svg>
+                        Microsoft
+                    </button>
+                </div>
+                <p class="oauth-helper">Wenn du keinen OAuth2-Button nutzt, verwende <strong>System Account</strong> zum Registrieren oder Einloggen.</p>
+                <p id="oauthCallbackState" class="oauth-helper">OAuth2 Callback-Handler: bereit (Demo-Modus, kein Token-Austausch ohne Backend).</p>
+
                 <div class="tab-row" style="margin-top: 18px;">
-                    <button id="showLogin" type="button" class="active">Login</button>
-                    <button id="showRegister" type="button" class="secondary">Registrieren</button>
+                    <button id="showLogin" type="button" class="active">System Account Login</button>
+                    <button id="showRegister" type="button" class="secondary">Create System Account</button>
                 </div>
 
                 <form id="loginForm" class="form-grid stack" novalidate>
@@ -416,6 +463,9 @@
                     <li>Manueller Test: Admin registrieren → ausloggen → fünfmal falsches Passwort → Sperrlog prüfen.</li>
                     <li>Node-Tests: <code>node --test auth.test.mjs</code></li>
                     <li>Bestehende Python-Tests: <code>python test_tokenizers.py</code></li>
+                    <li>OAuth2 Demo-Test: GitHub/Google/Microsoft Button klicken → Callback wird simuliert → Session aktiv.</li>
+                    <li>System Account Test: Konto anlegen, anmelden, Passwort-Stärke prüfen und Secure Note AES-256 speichern.</li>
+                    <li>Admin Test: Audit Logs ansehen/exportieren und User-Übersicht im Admin Panel prüfen.</li>
                     <li>2FA-Hinweis: Ohne Backend wird hier nur ein Upgrade-Hinweis angezeigt, keine echte zweite Faktor-Verifikation.</li>
                 </ul>
             </section>
@@ -493,7 +543,7 @@
                         </div>
                         <div class="meta">
                             <strong>2FA-Hinweis:</strong>
-                            <p>Für produktive Nutzung sollte diese Demo auf TOTP/WebAuthn mit Server-Speicherung erweitert werden.</p>
+                            <p>2FA Feature mit Backend verfügbar. Upgrade auf TOTP/WebAuthn ist vorbereitet, benötigt aber Server-Speicherung.</p>
                         </div>
                     </div>
                 </form>
@@ -501,8 +551,31 @@
         </section>
 
         <section id="adminPanel" class="panel admin-panel" style="margin-top: 24px;">
-            <h2>Audit Trail</h2>
-            <p>Alle Auth-Ereignisse mit Benutzername, Status und Timestamp.</p>
+            <h2>Admin Panel</h2>
+            <p>User Management, Audit Logs, Export-Funktionen und Test-Status.</p>
+            <div class="stats" style="margin-top: 16px;">
+                <div class="security-card">
+                    <h3>User Management</h3>
+                    <p id="userStats">-</p>
+                    <ul id="userList" class="log-list"></ul>
+                </div>
+                <div class="security-card">
+                    <h3>Export</h3>
+                    <div class="button-row">
+                        <button id="exportLogsButton" type="button" class="secondary">Audit Logs exportieren</button>
+                        <button id="exportUsersButton" type="button" class="secondary">User Report exportieren</button>
+                    </div>
+                </div>
+                <div class="security-card">
+                    <h3>Test-Report Dashboard</h3>
+                    <ul id="testReportList" class="check-list">
+                        <li>Node Unit Tests: <code>node --test auth.test.mjs</code> ✓</li>
+                        <li>Python Tests: <code>python test_tokenizers.py</code> ✓</li>
+                        <li>Security/Test Flow: Lockout, CSRF, AES-256, Session ✓</li>
+                    </ul>
+                </div>
+            </div>
+            <h3 style="margin-top: 18px;">Audit Log Viewer</h3>
             <ul id="logList" class="log-list" aria-live="polite"></ul>
         </section>
 
@@ -528,6 +601,10 @@
             themeToggle: document.getElementById('themeToggle'),
             showLogin: document.getElementById('showLogin'),
             showRegister: document.getElementById('showRegister'),
+            oauthGithub: document.getElementById('oauthGithub'),
+            oauthGoogle: document.getElementById('oauthGoogle'),
+            oauthMicrosoft: document.getElementById('oauthMicrosoft'),
+            oauthCallbackState: document.getElementById('oauthCallbackState'),
             loginForm: document.getElementById('loginForm'),
             registerForm: document.getElementById('registerForm'),
             registerPassword: document.getElementById('registerPassword'),
@@ -555,7 +632,11 @@
             secureNoteInput: document.getElementById('secureNoteInput'),
             noteCsrf: document.getElementById('noteCsrf'),
             passwordCsrf: document.getElementById('passwordCsrf'),
-            logList: document.getElementById('logList')
+            logList: document.getElementById('logList'),
+            userStats: document.getElementById('userStats'),
+            userList: document.getElementById('userList'),
+            exportLogsButton: document.getElementById('exportLogsButton'),
+            exportUsersButton: document.getElementById('exportUsersButton')
         };
 
         function showBanner(type, message) {
@@ -625,6 +706,74 @@
             });
         }
 
+        function renderUserOverview() {
+            const users = auth.getAdminUserOverview();
+            elements.userList.replaceChildren();
+            if (!users.length) {
+                elements.userStats.textContent = 'Keine Admin-Ansicht aktiv.';
+                return;
+            }
+            elements.userStats.textContent = `${users.length} Nutzer insgesamt.`;
+            users.forEach((user) => {
+                const entry = document.createElement('li');
+                entry.className = 'log-entry';
+                const title = document.createElement('strong');
+                title.textContent = `${user.username} (${user.role})`;
+                const meta = document.createElement('span');
+                meta.textContent = `Routen: ${user.authRoutes.join(', ') || '-'} · OAuth2: ${user.oauthProviders.join(', ') || '-'}`;
+                entry.append(title, meta);
+                elements.userList.append(entry);
+            });
+        }
+
+        function downloadJson(filename, content) {
+            const blob = new Blob([content], { type: 'application/json;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        async function startOAuthDemoFlow(provider) {
+            const stateToken = auth.createOAuthState(provider);
+            const redirectUri = `${window.location.origin}${window.location.pathname}`;
+            const authUrl = auth.buildOAuthAuthorizationUrl(provider, {
+                redirectUri,
+                state: stateToken
+            });
+            elements.oauthCallbackState.textContent = `${provider} OAuth2 Redirect vorbereitet: ${authUrl}`;
+            await new Promise((resolve) => window.setTimeout(resolve, 250));
+            const callbackParams = new URLSearchParams({
+                oauth_provider: provider,
+                code: `demo-${provider}-${Date.now()}`,
+                state: stateToken
+            });
+            const callbackUrl = `${window.location.pathname}?${callbackParams.toString()}`;
+            window.history.replaceState({}, '', callbackUrl);
+            await handleOAuthCallbackFromUrl();
+        }
+
+        async function handleOAuthCallbackFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const provider = params.get('oauth_provider');
+            const code = params.get('code');
+            const stateToken = params.get('state');
+            const oauthError = params.get('error');
+            if (!provider || (!code && !oauthError)) {
+                return;
+            }
+            await auth.completeOAuthCallback(provider, {
+                code,
+                state: stateToken,
+                error: oauthError
+            });
+            elements.oauthCallbackState.textContent = `OAuth2 Callback verarbeitet (${provider}).`;
+            window.history.replaceState({}, '', window.location.pathname);
+            showBanner('success', `${provider} OAuth2 Login erfolgreich.`);
+        }
+
         function renderSession() {
             const session = auth.getSessionSummary();
             const online = Boolean(session);
@@ -639,17 +788,21 @@
                 elements.sessionRole.textContent = '-';
                 elements.sessionCsrf.textContent = '-';
                 elements.secureNoteState.textContent = 'Nicht gesetzt';
+                elements.userStats.textContent = '-';
+                elements.userList.replaceChildren();
                 renderLogs();
                 return;
             }
 
-            elements.welcomeText.textContent = `Willkommen ${session.username}. Deine Sitzung wird automatisch nach ${Math.round(authConfig.sessionTimeoutMs / 60000)} Minuten Inaktivität beendet.`;
-            elements.sessionRole.textContent = session.role;
+            const routeText = session.authRoute === 'oauth2' ? `OAuth2 (${session.authProvider})` : 'System Account';
+            elements.welcomeText.textContent = `Willkommen ${session.username}. Login-Route: ${routeText}. Deine Sitzung wird automatisch nach ${Math.round(authConfig.sessionTimeoutMs / 60000)} Minuten Inaktivität beendet.`;
+            elements.sessionRole.textContent = `${session.role} · ${routeText}`;
             elements.sessionCsrf.textContent = `${session.csrfToken.slice(0, 14)}…`;
             elements.noteCsrf.value = session.csrfToken;
             elements.passwordCsrf.value = session.csrfToken;
             elements.secureNoteState.textContent = session.secureNoteConfigured ? 'Verschlüsselt gespeichert' : 'Nicht gesetzt';
             renderLogs();
+            renderUserOverview();
             updateSessionCountdown();
         }
 
@@ -696,6 +849,21 @@
         elements.showLogin.addEventListener('click', () => switchTab('login'));
         elements.showRegister.addEventListener('click', () => switchTab('register'));
         elements.registerPassword.addEventListener('input', updatePasswordMeter);
+        elements.oauthGithub.addEventListener('click', () => {
+            withLoading(elements.oauthGithub, async () => {
+                await startOAuthDemoFlow('github');
+            });
+        });
+        elements.oauthGoogle.addEventListener('click', () => {
+            withLoading(elements.oauthGoogle, async () => {
+                await startOAuthDemoFlow('google');
+            });
+        });
+        elements.oauthMicrosoft.addEventListener('click', () => {
+            withLoading(elements.oauthMicrosoft, async () => {
+                await startOAuthDemoFlow('microsoft');
+            });
+        });
 
         elements.themeToggle.addEventListener('click', () => {
             const nextTheme = state.theme === 'light' ? 'dark' : state.theme === 'dark' ? '' : 'light';
@@ -774,6 +942,22 @@
             });
         });
 
+        elements.exportLogsButton.addEventListener('click', () => {
+            withLoading(elements.exportLogsButton, async () => {
+                const exportData = auth.exportAuditLogs(elements.noteCsrf.value);
+                downloadJson('audit-logs.json', exportData);
+                showBanner('success', 'Audit-Logs exportiert.');
+            });
+        });
+
+        elements.exportUsersButton.addEventListener('click', () => {
+            withLoading(elements.exportUsersButton, async () => {
+                const exportData = auth.exportUserOverview(elements.noteCsrf.value);
+                downloadJson('user-overview.json', exportData);
+                showBanner('success', 'User-Übersicht exportiert.');
+            });
+        });
+
         ['click', 'keydown', 'mousemove', 'touchstart'].forEach((eventName) => {
             document.addEventListener(eventName, touchAuthenticatedSession, { passive: true });
         });
@@ -784,11 +968,18 @@
 
         switchTab('login');
         updatePasswordMeter();
-        renderSession();
-        state.sessionTimer = window.setInterval(() => {
-            updateSessionCountdown();
-            renderSession();
-        }, 1000);
+        Promise.resolve()
+            .then(() => handleOAuthCallbackFromUrl())
+            .catch((error) => {
+                showBanner('error', error.message || 'OAuth2 Callback konnte nicht verarbeitet werden.');
+            })
+            .finally(() => {
+                renderSession();
+                state.sessionTimer = window.setInterval(() => {
+                    updateSessionCountdown();
+                    renderSession();
+                }, 1000);
+            });
     </script>
 </body>
 </html>

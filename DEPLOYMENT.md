@@ -3,12 +3,14 @@
 ## GitHub Pages (automatisch)
 
 Jeder Push auf den `main`-Branch löst den Workflow
-`.github/workflows/pages.yml` aus:
+`.github/workflows/final-deploy.yml` (und kompatibel `pages.yml`) aus:
 
 1. HTML/JS werden validiert.
-2. Die Node.js Auth-Tests (`auth.test.mjs`) werden ausgeführt.
-3. Bei Erfolg wird die fertige Site als Pages-Artefakt hochgeladen und
+2. Node.js-Tests (`auth.test.mjs`) und Python-Tests laufen.
+3. Einfache Security-/Lint-Checks laufen mit.
+4. Bei Erfolg wird die fertige Site als Pages-Artefakt hochgeladen und
    automatisch deployed.
+5. Nach Deploy folgt ein Health-Check der Live-URL.
 
 **Live-URL:**
 ```

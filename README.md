@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/RFOF-NETWORK/rfof-network.github.ton/actions/workflows/ci.yml/badge.svg)](https://github.com/RFOF-NETWORK/rfof-network.github.ton/actions/workflows/ci.yml)
 [![Deploy to GitHub Pages](https://github.com/RFOF-NETWORK/rfof-network.github.ton/actions/workflows/pages.yml/badge.svg)](https://github.com/RFOF-NETWORK/rfof-network.github.ton/actions/workflows/pages.yml)
+[![Final Deploy](https://github.com/RFOF-NETWORK/rfof-network.github.ton/actions/workflows/final-deploy.yml/badge.svg)](https://github.com/RFOF-NETWORK/rfof-network.github.ton/actions/workflows/final-deploy.yml)
 
 PRAIAI[Copilot(PRAI[Gemini/GoogleAI{Deepseek}]GPT) #BlueDeepGold macht alles nutzbar in GitHub von RFOF-NETWORK.
 Mit eigener Python Paket Reihe v0.0.1 [multi_spark_tokenizer_python_paket](https://github.com/RFOF-NETWORK/rfof-network.github.ton/new/main?filename=.github%2Fworkflows%2Fpython-publish.yml&workflow_template=ci%2Fpython-publish)
@@ -12,6 +13,23 @@ Mit eigener Python Paket Reihe v0.0.1 [multi_spark_tokenizer_python_paket](https
 - 📖 Projektdoku: [`docs/README.md`](docs/README.md)
 - 🚀 Deployment-Guide: [`DEPLOYMENT.md`](DEPLOYMENT.md)
 - 🔐 Security-Policy: [`SECURITY.md`](SECURITY.md)
+- 🔑 OAuth2 Setup: [`OAUTH2-SETUP.md`](OAUTH2-SETUP.md)
+- 🧪 Testing Guide: [`TESTING.md`](TESTING.md)
+
+## ABC Finale Auth-Demo
+
+- OAuth2 Buttons für **GitHub, Google, Microsoft** (Demo-Flow mit Callback-Handler vorbereitet)
+- Fallback **System Account** (Registrieren + Login)
+- Dual-Session-Handling (OAuth2 oder System Account) mit einheitlichem Logout
+- AES-256-GCM Secure Note, SHA256→SHA512 Passwort-Flow, Lockout, Audit Logs
+- Admin Panel mit User-Überblick und Export-Funktionen
+
+## Schneller Test
+
+```bash
+node --test auth.test.mjs
+python test_tokenizers.py
+```
 
 # Mein Tokenizer-Projekt
 

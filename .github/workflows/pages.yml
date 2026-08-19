@@ -49,8 +49,23 @@ jobs:
           print("✅ index.html syntax OK")
           EOF
 
-      - name: Validate auth.js is parseable
-        run: node --input-type=module < auth.js && echo "✅ auth.js parses OK"
+      - name: Validate JavaScript is parseable
+        run: |
+          node --input-type=module < auth.js
+          python3 - <<'PY'
+          import re
+          import subprocess
+          import tempfile
+          text = open('index.html', encoding='utf-8').read()
+          match = re.search(r'<script type="module">([\s\S]*?)</script>\s*</body>', text)
+          if not match:
+              raise SystemExit('No inline module script found in index.html')
+          with tempfile.NamedTemporaryFile('w', suffix='.mjs', delete=False, encoding='utf-8') as handle:
+              handle.write(match.group(1))
+              script_path = handle.name
+          subprocess.run(['node', '--check', script_path], check=True)
+          print("✅ auth.js and inline module script parse OK")
+          PY
 
       - name: Run auth unit tests
         run: node --test auth.test.mjs
