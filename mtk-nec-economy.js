@@ -128,8 +128,8 @@ export function timeline4DValue(baseValue) {
  * @returns {{ integer: number, fractional: number, total: number }}
  */
 export function apply30KAxiom(totalUnits) {
-    const RATIO_INTEGER   = 29900 / 30000; // ≈ 0.9967
-    const RATIO_FRACTIONAL = 1100 / 30000; // ≈ 0.0367  (rounds to 1)
+    const RATIO_INTEGER    = 29900 / 30000; // ≈ 0.9967
+    const RATIO_FRACTIONAL =   100 / 30000; // ≈ 0.0033  (29900 + 100 = 30000)
     const integer    = totalUnits * RATIO_INTEGER;
     const fractional = totalUnits * RATIO_FRACTIONAL;
     return { integer, fractional, total: integer + fractional };
@@ -246,11 +246,10 @@ export function necDiscountDice(roll = null) {
     const r = roll !== null
         ? Math.max(1, Math.min(6, Math.round(roll)))
         : Math.ceil(Math.random() * 6);
-    const raw = 50 + (r - 3) * 5;   // roll=1→35%, roll=4→55%, roll=6→65%
-    // Note: original formula is "50 % ± (roll × 5 %)" — centred on roll=0, so:
-    const rawCentered = 50 + r * 5;  // roll=1→55%, roll=6→80%
-    const clamped = Math.min(70, rawCentered);
-    return { roll: r, rawPercent: rawCentered, clampedPercent: clamped };
+    // Formula: 50 % + (roll × 5 %), max capped at 70 % (Layer-C maximum)
+    const rawPercent = 50 + r * 5;   // roll=1→55 %, roll=6→80 %
+    const clamped = Math.min(70, rawPercent);
+    return { roll: r, rawPercent, clampedPercent: clamped };
 }
 
 /**
