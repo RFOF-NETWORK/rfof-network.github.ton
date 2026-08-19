@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multi_spark_tokenizer_python_paket"
-version = "0.1.0"
+version = "0.2.0"
 description = "PRAIAI Tokenizer Package - Copilot powered Python tokenizers"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -23,6 +23,13 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    "cryptography>=43.0.0",
+    "PyJWT>=2.9.0",
+    "python-dotenv>=1.0.1",
+    "requests>=2.32.3",
+    "web3>=7.0.0",
 ]
 
 [tool.setuptools]
