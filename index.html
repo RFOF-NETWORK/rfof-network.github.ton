@@ -1539,7 +1539,19 @@
                 card.setAttribute('tabindex', '0');
                 card.setAttribute('role', 'button');
                 card.setAttribute('aria-label', app.name);
-                card.innerHTML = `<div class="rapp-icon">${app.icon}</div><div class="rapp-name">${app.name}</div><div class="rapp-desc">${app.desc}</div><div class="rapp-meta">⭐ ${app.rating} · ${app.dl} Downloads</div>`;
+                const icon = document.createElement('div');
+                icon.className = 'rapp-icon';
+                icon.textContent = app.icon;
+                const name = document.createElement('div');
+                name.className = 'rapp-name';
+                name.textContent = app.name;
+                const desc = document.createElement('div');
+                desc.className = 'rapp-desc';
+                desc.textContent = app.desc;
+                const meta = document.createElement('div');
+                meta.className = 'rapp-meta';
+                meta.textContent = `⭐ ${app.rating} · ${app.dl} Downloads`;
+                card.append(icon, name, desc, meta);
                 card.addEventListener('click', () => {
                     showView(app.view);
                     if (app.view === 'explorerSection') { renderExplorer(); }
@@ -1569,7 +1581,11 @@
             const logs = auth.getVisibleLogs ? auth.getVisibleLogs() : auth.getLogs();
             const txLogs = logs.filter((l) => ['WALLET_DEPOSIT','WALLET_WITHDRAW','WALLET_SEND','WALLET_RECEIVE','MINING_START','MINING_STOP'].includes(l.action));
             if (txLogs.length === 0) {
-                txList.innerHTML = '<li style="color:var(--muted);font-size:0.85rem;">Noch keine Transaktionen.</li>';
+                const emptyItem = document.createElement('li');
+                emptyItem.style.color = 'var(--muted)';
+                emptyItem.style.fontSize = '0.85rem';
+                emptyItem.textContent = 'Noch keine Transaktionen.';
+                txList.replaceChildren(emptyItem);
                 return;
             }
             txList.replaceChildren();
@@ -1577,7 +1593,13 @@
                 const li = document.createElement('li');
                 li.className = 'tx-item';
                 const shortHash = tx.txHash || ('0x' + Math.random().toString(16).slice(2, 18));
-                li.innerHTML = `<span class="tx-hash">${shortHash}</span> &nbsp; ${tx.action} &nbsp; <span style="color:var(--muted)">${tx.timestamp}</span>`;
+                const hash = document.createElement('span');
+                hash.className = 'tx-hash';
+                hash.textContent = shortHash;
+                const timestamp = document.createElement('span');
+                timestamp.style.color = 'var(--muted)';
+                timestamp.textContent = tx.timestamp;
+                li.append(hash, document.createTextNode(` \u00a0 ${tx.action} \u00a0 `), timestamp);
                 txList.appendChild(li);
             });
         }
@@ -1609,14 +1631,41 @@
             const content = document.getElementById('walletActionContent');
             if (!modal || !title || !content) { return; }
             title.textContent = cfg.title;
+            content.replaceChildren();
             if (cfg.qr) {
                 const session = auth.getSessionSummary();
                 const addr = 'rfof1' + (session?.username || '').replace(/\W/g, '') + '0000';
-                content.innerHTML = `<p>Deine Wallet-Adresse:</p><p style="font-family:monospace;background:var(--surface);padding:10px;border-radius:8px;">${addr}</p><button type="button" onclick="navigator.clipboard?.writeText('${addr}').then(() => showBanner('success','Adresse kopiert!'))">Kopieren</button>`;
+                const intro = document.createElement('p');
+                intro.textContent = 'Deine Wallet-Adresse:';
+                const address = document.createElement('p');
+                address.style.fontFamily = 'monospace';
+                address.style.background = 'var(--surface)';
+                address.style.padding = '10px';
+                address.style.borderRadius = '8px';
+                address.textContent = addr;
+                const copyButton = document.createElement('button');
+                copyButton.type = 'button';
+                copyButton.textContent = 'Kopieren';
+                copyButton.addEventListener('click', () => {
+                    const writePromise = navigator.clipboard?.writeText(addr);
+                    if (!writePromise) {
+                        showBanner('error', 'Clipboard API nicht verfügbar.');
+                        return;
+                    }
+                    writePromise
+                        .then(() => showBanner('success', 'Adresse kopiert!'))
+                        .catch(() => showBanner('error', 'Adresse konnte nicht kopiert werden.'));
+                });
+                content.append(intro, address, copyButton);
             } else if (cfg.mining) {
                 const isMining = cfg.mining === 'start';
-                content.innerHTML = `<p>${isMining ? '⛏️ Mining wird gestartet…' : '⏹ Mining wird gestoppt…'}</p><button type="button" id="walletActionConfirm">${isMining ? 'Starten' : 'Stoppen'}</button>`;
-                document.getElementById('walletActionConfirm')?.addEventListener('click', () => {
+                const message = document.createElement('p');
+                message.textContent = isMining ? '⛏️ Mining wird gestartet…' : '⏹ Mining wird gestoppt…';
+                const confirmButton = document.createElement('button');
+                confirmButton.type = 'button';
+                confirmButton.id = 'walletActionConfirm';
+                confirmButton.textContent = isMining ? 'Starten' : 'Stoppen';
+                confirmButton.addEventListener('click', () => {
                     const session = auth.getSessionSummary();
                     if (session) {
                         auth._appendLog(cfg.log, 'success', session.username, isMining ? 'Mining gestartet' : 'Mining gestoppt');
@@ -1625,10 +1674,27 @@
                     modal.classList.remove('open');
                     renderTxHistory();
                 });
+                content.append(message, confirmButton);
             } else {
-                const inputs = (cfg.fields || []).map((f) => `<div><label for="${f.id}">${f.label}</label><input id="${f.id}" type="${f.type || 'text'}"></div>`).join('');
-                content.innerHTML = `<div class="form-grid stack">${inputs}<button type="button" id="walletActionConfirm">Bestätigen</button></div>`;
-                document.getElementById('walletActionConfirm')?.addEventListener('click', () => {
+                const formGrid = document.createElement('div');
+                formGrid.className = 'form-grid stack';
+                (cfg.fields || []).forEach((f) => {
+                    const fieldWrap = document.createElement('div');
+                    const label = document.createElement('label');
+                    label.htmlFor = f.id;
+                    label.textContent = f.label;
+                    const input = document.createElement('input');
+                    input.id = f.id;
+                    input.type = f.type || 'text';
+                    fieldWrap.append(label, input);
+                    formGrid.appendChild(fieldWrap);
+                });
+                const confirmButton = document.createElement('button');
+                confirmButton.type = 'button';
+                confirmButton.id = 'walletActionConfirm';
+                confirmButton.textContent = 'Bestätigen';
+                formGrid.appendChild(confirmButton);
+                confirmButton.addEventListener('click', () => {
                     const session = auth.getSessionSummary();
                     if (session) {
                         const amount = document.getElementById('waAmount')?.value || '';
@@ -1638,6 +1704,7 @@
                     modal.classList.remove('open');
                     renderTxHistory();
                 });
+                content.appendChild(formGrid);
             }
             modal.classList.add('open');
         }
@@ -1669,8 +1736,17 @@
             filtered.forEach((item) => {
                 const li = document.createElement('li');
                 li.className = 'hash-item';
-                li.innerHTML = `<span class="hash-val">${item.hash.slice(0, 20)}…</span><span class="hash-detail">${item.action} · ${item.user}</span><span class="hash-detail">${item.status}</span>`;
-                li.querySelector('.hash-val').addEventListener('click', () => openHashDetail(item));
+                const hash = document.createElement('span');
+                hash.className = 'hash-val';
+                hash.textContent = `${item.hash.slice(0, 20)}…`;
+                hash.addEventListener('click', () => openHashDetail(item));
+                const detail = document.createElement('span');
+                detail.className = 'hash-detail';
+                detail.textContent = `${item.action} · ${item.user}`;
+                const status = document.createElement('span');
+                status.className = 'hash-detail';
+                status.textContent = item.status;
+                li.append(hash, detail, status);
                 hashList.appendChild(li);
             });
 
@@ -1761,7 +1837,11 @@
             try {
                 const cfg = auth.getTwoFASettings(session.csrfToken);
                 const el = document.getElementById('twoFAStatus');
-                if (el) { el.innerHTML = `2FA: <strong>${cfg.enabled ? `Aktiv (${cfg.method} → ${cfg.contact})` : 'Deaktiviert'}</strong>`; }
+                if (el) {
+                    const strong = document.createElement('strong');
+                    strong.textContent = cfg.enabled ? `Aktiv (${cfg.method} → ${cfg.contact})` : 'Deaktiviert';
+                    el.replaceChildren(document.createTextNode('2FA: '), strong);
+                }
                 if (cfg.contact) {
                     const contactInput = document.getElementById('twoFAContact');
                     if (contactInput) { contactInput.value = cfg.contact; }
@@ -1778,12 +1858,24 @@
                 if (list) {
                     list.replaceChildren();
                     if (providers.length === 0) {
-                        list.innerHTML = '<li style="color:var(--muted)">Keine OAuth2-Provider verknüpft.</li>';
+                        const emptyItem = document.createElement('li');
+                        emptyItem.style.color = 'var(--muted)';
+                        emptyItem.textContent = 'Keine OAuth2-Provider verknüpft.';
+                        list.appendChild(emptyItem);
                     } else {
                         providers.forEach((p) => {
                             const li = document.createElement('li');
                             li.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 0;';
-                            li.innerHTML = `<span>${p}</span><button type="button" class="secondary unlink-btn" data-provider="${p}" style="padding:4px 10px;font-size:0.8rem;">Trennen</button>`;
+                            const provider = document.createElement('span');
+                            provider.textContent = p;
+                            const button = document.createElement('button');
+                            button.type = 'button';
+                            button.className = 'secondary unlink-btn';
+                            button.dataset.provider = p;
+                            button.style.padding = '4px 10px';
+                            button.style.fontSize = '0.8rem';
+                            button.textContent = 'Trennen';
+                            li.append(provider, button);
                             list.appendChild(li);
                         });
                     }
@@ -2058,11 +2150,23 @@
                     SI_PREFIXES.forEach(({ exp, symbol, name, value }) => {
                         const tr = document.createElement('tr');
                         tr.style.borderTop = '1px solid var(--border)';
-                        tr.innerHTML = `
-                            <td style="padding:3px 8px;">10<sup>${exp}</sup></td>
-                            <td style="text-align:center;padding:3px 8px;">${symbol || '—'}</td>
-                            <td style="text-align:center;padding:3px 8px;">${name}</td>
-                            <td style="text-align:right;padding:3px 8px;font-family:monospace;">${value.toExponential(0)}</td>`;
+                        const expCell = document.createElement('td');
+                        expCell.style.padding = '3px 8px';
+                        expCell.append('10', Object.assign(document.createElement('sup'), { textContent: String(exp) }));
+                        const symbolCell = document.createElement('td');
+                        symbolCell.style.textAlign = 'center';
+                        symbolCell.style.padding = '3px 8px';
+                        symbolCell.textContent = symbol || '—';
+                        const nameCell = document.createElement('td');
+                        nameCell.style.textAlign = 'center';
+                        nameCell.style.padding = '3px 8px';
+                        nameCell.textContent = name;
+                        const valueCell = document.createElement('td');
+                        valueCell.style.textAlign = 'right';
+                        valueCell.style.padding = '3px 8px';
+                        valueCell.style.fontFamily = 'monospace';
+                        valueCell.textContent = value.toExponential(0);
+                        tr.append(expCell, symbolCell, nameCell, valueCell);
                         tbody.appendChild(tr);
                     });
                 }
