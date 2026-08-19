@@ -3,622 +3,792 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RFOF-NETWORK Tokenizer Demo</title>
+    <title>RFOF-NETWORK Auth &amp; Security Demo</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            color-scheme: dark;
+            --bg: #0b1220;
+            --surface: rgba(15, 23, 42, 0.88);
+            --surface-strong: #111827;
+            --text: #e5eefb;
+            --muted: #9fb0ca;
+            --accent: #60a5fa;
+            --accent-strong: #2563eb;
+            --danger: #f87171;
+            --success: #34d399;
+            --warning: #fbbf24;
+            --border: rgba(148, 163, 184, 0.22);
+            --shadow: 0 20px 50px rgba(15, 23, 42, 0.35);
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            color: #333;
+        body[data-theme="light"] {
+            color-scheme: light;
+            --bg: linear-gradient(135deg, #f7fafc 0%, #dbeafe 100%);
+            --surface: rgba(255, 255, 255, 0.92);
+            --surface-strong: #ffffff;
+            --text: #0f172a;
+            --muted: #475569;
+            --accent: #2563eb;
+            --accent-strong: #1d4ed8;
+            --danger: #dc2626;
+            --success: #059669;
+            --warning: #d97706;
+            --border: rgba(148, 163, 184, 0.35);
+            --shadow: 0 20px 50px rgba(30, 41, 59, 0.12);
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        header {
-            text-align: center;
-            color: white;
-            margin-bottom: 40px;
-            animation: fadeIn 0.6s ease-in;
-        }
-
-        header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        header p {
-            font-size: 1.1em;
-            opacity: 0.9;
-        }
-
-        .content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-
-        @media (max-width: 768px) {
-            .content {
-                grid-template-columns: 1fr;
+        @media (prefers-color-scheme: light) {
+            body:not([data-theme="dark"]) {
+                color-scheme: light;
+                --bg: linear-gradient(135deg, #f7fafc 0%, #dbeafe 100%);
+                --surface: rgba(255, 255, 255, 0.92);
+                --surface-strong: #ffffff;
+                --text: #0f172a;
+                --muted: #475569;
+                --accent: #2563eb;
+                --accent-strong: #1d4ed8;
+                --danger: #dc2626;
+                --success: #059669;
+                --warning: #d97706;
+                --border: rgba(148, 163, 184, 0.35);
+                --shadow: 0 20px 50px rgba(30, 41, 59, 0.12);
             }
         }
 
-        .card {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            animation: slideUp 0.6s ease-out;
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Inter, "Segoe UI", system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
         }
 
-        .card h2 {
-            color: #667eea;
-            margin-bottom: 20px;
-            font-size: 1.8em;
-            border-bottom: 3px solid #667eea;
-            padding-bottom: 10px;
+        .shell {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
         }
 
-        .card.bpe h2 {
-            color: #764ba2;
-            border-bottom-color: #764ba2;
+        .hero,
+        .panel,
+        .notice,
+        .banner {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(18px);
         }
 
-        .form-group {
-            margin-bottom: 20px;
+        .hero {
+            padding: 28px;
+            display: grid;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .hero-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        h1, h2, h3 { margin: 0; }
+        h1 { font-size: clamp(2rem, 5vw, 3rem); }
+        p { margin: 0; color: var(--muted); }
+
+        .hero-actions,
+        .pill-row,
+        .tab-row,
+        .button-row,
+        .stats,
+        .meta-grid,
+        .footer-row,
+        .split {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .pill,
+        .meta,
+        .banner {
+            padding: 12px 14px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+        }
+
+        .pill { background: rgba(96, 165, 250, 0.12); color: var(--text); }
+        .meta { background: rgba(15, 23, 42, 0.18); }
+
+        .banner {
+            margin-bottom: 16px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .banner.show { display: flex; }
+        .banner.success { border-color: rgba(52, 211, 153, 0.35); color: var(--success); }
+        .banner.error { border-color: rgba(248, 113, 113, 0.35); color: var(--danger); }
+        .banner.info { border-color: rgba(96, 165, 250, 0.35); color: var(--accent); }
+
+        button,
+        input,
+        textarea {
+            font: inherit;
+        }
+
+        button {
+            border: 0;
+            border-radius: 14px;
+            padding: 12px 16px;
+            cursor: pointer;
+            color: white;
+            background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+            transition: transform 0.18s ease, opacity 0.18s ease;
+        }
+
+        button:hover { transform: translateY(-1px); }
+        button:disabled { cursor: wait; opacity: 0.65; transform: none; }
+        button.secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        button.danger { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+
+        .grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+            gap: 24px;
+        }
+
+        .panel,
+        .notice {
+            padding: 22px;
+        }
+
+        .panel h2,
+        .notice h2 {
+            margin-bottom: 8px;
+        }
+
+        .tab-row button {
+            flex: 1 1 140px;
+        }
+
+        .tab-row button.active {
+            box-shadow: inset 0 0 0 2px rgba(255,255,255,0.28);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin-top: 18px;
+        }
+
+        .form-grid.single,
+        .stack {
+            grid-template-columns: 1fr;
         }
 
         label {
             display: block;
             font-weight: 600;
-            margin-bottom: 8px;
-            color: #555;
+            margin-bottom: 6px;
         }
 
-        input, textarea, select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-family: 'Courier New', monospace;
-            font-size: 1em;
-            transition: border-color 0.3s;
-        }
-
-        input:focus, textarea:focus, select:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
+        input,
         textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        button {
             width: 100%;
-            padding: 12px 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: var(--surface-strong);
+            color: var(--text);
+            padding: 12px 14px;
         }
 
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        textarea { min-height: 110px; resize: vertical; }
+
+        .meter {
+            height: 10px;
+            border-radius: 999px;
+            background: rgba(148, 163, 184, 0.2);
+            overflow: hidden;
         }
 
-        button:active {
-            transform: translateY(0);
+        .meter > span {
+            display: block;
+            height: 100%;
+            width: 0;
+            background: var(--danger);
+            transition: width 0.2s ease, background 0.2s ease;
         }
 
-        .bpe button {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        .hint-list,
+        .log-list,
+        .check-list {
+            margin: 0;
+            padding-left: 18px;
+            color: var(--muted);
         }
 
-        .result {
-            background: #f8f9fa;
-            border-left: 4px solid #667eea;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 20px;
+        .stats > div,
+        .log-entry,
+        .security-card {
+            flex: 1 1 180px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 14px;
+            background: rgba(15, 23, 42, 0.16);
+        }
+
+        .session-highlight {
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .dashboard,
+        .admin-panel {
             display: none;
         }
 
-        .result.show {
-            display: block;
-            animation: slideIn 0.3s ease-out;
-        }
+        .dashboard.show,
+        .admin-panel.show { display: block; }
 
-        .bpe .result {
-            border-left-color: #764ba2;
-        }
-
-        .result h3 {
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .result-content {
-            background: white;
-            padding: 15px;
-            border-radius: 6px;
-            font-family: 'Courier New', monospace;
-            overflow-x: auto;
-            line-height: 1.6;
-        }
-
-        .token-visualization {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .token {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 0.9em;
-            font-weight: 600;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .bpe .token {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-        }
-
-        .stats {
+        .log-list {
+            list-style: none;
+            padding: 0;
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 20px;
+            gap: 10px;
+            max-height: 320px;
+            overflow: auto;
         }
 
-        .stat {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            border: 2px solid #e0e0e0;
+        .log-entry {
+            display: grid;
+            gap: 4px;
         }
 
-        .stat-label {
-            font-size: 0.9em;
-            color: #999;
-            margin-bottom: 5px;
+        .log-entry strong { color: var(--text); }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: var(--muted);
         }
 
-        .stat-value {
-            font-size: 1.5em;
-            font-weight: 700;
-            color: #667eea;
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--warning);
         }
 
-        .bpe .stat-value {
-            color: #764ba2;
+        .dot.online { background: var(--success); }
+        .dot.offline { background: var(--danger); }
+
+        .footer-row {
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 22px;
+            color: var(--muted);
         }
 
-        .info {
-            background: #e8f4f8;
-            border-left: 4px solid #0d9fb8;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 0.95em;
-            color: #333;
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
         }
 
-        .info strong {
-            color: #0d9fb8;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        footer {
-            text-align: center;
-            color: white;
-            margin-top: 50px;
-            font-size: 0.9em;
-            opacity: 0.8;
-        }
-
-        footer a {
-            color: white;
-            text-decoration: none;
-            border-bottom: 1px solid white;
-        }
-
-        .error {
-            background: #fee;
-            border-left-color: #c33;
-            color: #c33;
-        }
-
-        .success {
-            background: #efe;
-            border-left-color: #3c3;
-            color: #3c3;
+        @media (max-width: 920px) {
+            .grid { grid-template-columns: 1fr; }
+            .form-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🚀 RFOF-NETWORK Tokenizer</h1>
-            <p>Interaktive Demo: Wie LLMs Text verstehen</p>
-        </header>
-
-        <div class="content">
-            <!-- CharTokenizer Card -->
-            <div class="card">
-                <h2>🔤 Zeichen-Tokenizer</h2>
-                
-                <div class="info">
-                    <strong>Wie es funktioniert:</strong> Jedes Zeichen (Buchstabe, Zahl, Sonderzeichen) bekommt eine eindeutige Zahl (ID). Das ist der erste Schritt, wie LLMs Text verarbeiten.
+    <div class="shell">
+        <section class="hero">
+            <div class="hero-top">
+                <div>
+                    <h1>🔐 Auth &amp; Security Demo</h1>
+                    <p>Client-side Login/Logout mit Session-Management, Audit-Logs, Passwort-Stärke, Double-Hashing und AES-256-GCM Demo.</p>
                 </div>
-
-                <div class="form-group">
-                    <label for="charInput">Text eingeben:</label>
-                    <textarea id="charInput" placeholder="z.B.: Hallo Welt! RFOF-NETWORK 2026..."></textarea>
-                </div>
-
-                <button onclick="tokenizeChar()">📊 Tokenisieren</button>
-
-                <div id="charResult" class="result">
-                    <h3>Ergebnis:</h3>
-                    <div class="result-content" id="charOutput"></div>
-                    
-                    <div class="stats">
-                        <div class="stat">
-                            <div class="stat-label">Zeichen</div>
-                            <div class="stat-value" id="charCount">0</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-label">Tokens</div>
-                            <div class="stat-value" id="charTokenCount">0</div>
-                        </div>
-                    </div>
-
-                    <div class="token-visualization" id="charTokens"></div>
+                <div class="hero-actions">
+                    <button id="themeToggle" class="secondary" type="button">🌓 Theme wechseln</button>
                 </div>
             </div>
-
-            <!-- BPETokenizer Card -->
-            <div class="card bpe">
-                <h2>🧩 BPE-Tokenizer</h2>
-                
-                <div class="info">
-                    <strong>Wie es funktioniert:</strong> BPE (Byte Pair Encoding) lernt häufige Buchstaben-Kombinationen und fasst sie zu einem Token zusammen. Das ist wie echte LLMs (GPT, Llama) arbeiten.
-                </div>
-
-                <div class="form-group">
-                    <label for="bpeTraining">Trainingstext:</label>
-                    <textarea id="bpeTraining" placeholder="z.B.: python python python lernen lernen programmieren">python python python lernen lernen programmieren</textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="bpeMerges">Anzahl Merge-Schritte:</label>
-                    <input type="number" id="bpeMerges" value="10" min="1" max="50">
-                </div>
-
-                <button onclick="trainBPE()">🎓 Trainieren</button>
-
-                <div class="form-group" style="margin-top: 20px;">
-                    <label for="bpeInput">Zu tokenisierendes Wort:</label>
-                    <input type="text" id="bpeInput" placeholder="z.B.: python, programmieren..." value="python">
-                </div>
-
-                <button onclick="tokenizeBPE()">📊 Tokenisieren</button>
-
-                <div id="bpeResult" class="result">
-                    <h3>Ergebnis:</h3>
-                    <div class="result-content" id="bpeOutput"></div>
-                    
-                    <div class="stats">
-                        <div class="stat">
-                            <div class="stat-label">Merge-Regeln</div>
-                            <div class="stat-value" id="bpeMergeCount">0</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-label">Tokens</div>
-                            <div class="stat-value" id="bpeTokenCount">0</div>
-                        </div>
-                    </div>
-
-                    <div class="token-visualization" id="bpeTokens"></div>
-                </div>
+            <div class="pill-row">
+                <div class="pill">HTTPS-Hinweis: Für echte Produktion nur über HTTPS ausliefern.</div>
+                <div class="pill">Rate-Limit Hinweis: 5 Fehlversuche → 15 Minuten Sperre.</div>
+                <div class="pill">Cookies Hinweis: httpOnly/Secure/SameSite benötigen ein Backend und werden hier erklärt, nicht gesetzt.</div>
             </div>
+        </section>
+
+        <div id="banner" class="banner" role="status" aria-live="polite">
+            <span id="bannerText"></span>
+            <button id="bannerClose" type="button" class="secondary">Schließen</button>
         </div>
 
-        <footer>
-            <p>Made with ❤️ by RFOF-NETWORK | 
-            <a href="https://github.com/RFOF-NETWORK/rfof-network.github.ton">GitHub Repo</a> | 
-            Powered by Copilot Agent</p>
-        </footer>
+        <div class="grid">
+            <section class="panel">
+                <div class="split" style="justify-content: space-between; align-items: center;">
+                    <div>
+                        <h2>Benutzerzugang</h2>
+                        <p>Registrierung, Login, Session-Refresh und Auto-Logout ohne Backend.</p>
+                    </div>
+                    <div class="status-badge"><span id="sessionDot" class="dot"></span><span id="sessionState">Nicht angemeldet</span></div>
+                </div>
+
+                <div class="tab-row" style="margin-top: 18px;">
+                    <button id="showLogin" type="button" class="active">Login</button>
+                    <button id="showRegister" type="button" class="secondary">Registrieren</button>
+                </div>
+
+                <form id="loginForm" class="form-grid stack" novalidate>
+                    <div>
+                        <label for="loginUsername">Benutzername</label>
+                        <input id="loginUsername" name="username" autocomplete="username" maxlength="32" required>
+                    </div>
+                    <div>
+                        <label for="loginPassword">Passwort</label>
+                        <input id="loginPassword" name="password" type="password" autocomplete="current-password" required>
+                    </div>
+                    <button id="loginButton" type="submit">Einloggen</button>
+                </form>
+
+                <form id="registerForm" class="form-grid stack" hidden novalidate>
+                    <div>
+                        <label for="registerUsername">Benutzername</label>
+                        <input id="registerUsername" name="username" autocomplete="username" maxlength="32" required>
+                    </div>
+                    <div>
+                        <label for="registerPassword">Passwort</label>
+                        <input id="registerPassword" name="password" type="password" autocomplete="new-password" required>
+                    </div>
+                    <div>
+                        <label for="registerPasswordConfirm">Passwort bestätigen</label>
+                        <input id="registerPasswordConfirm" name="confirmPassword" type="password" autocomplete="new-password" required>
+                    </div>
+                    <div>
+                        <label for="passwordStrengthText">Passwort-Stärke</label>
+                        <div class="meter" aria-hidden="true"><span id="passwordStrengthBar"></span></div>
+                        <p id="passwordStrengthText">Noch kein Passwort eingegeben.</p>
+                        <ul class="check-list">
+                            <li id="checkLength">Mindestens 8 Zeichen</li>
+                            <li id="checkUpper">Mindestens ein Großbuchstabe</li>
+                            <li id="checkNumber">Mindestens eine Zahl</li>
+                            <li id="checkSpecial">Mindestens ein Sonderzeichen</li>
+                        </ul>
+                    </div>
+                    <button id="registerButton" type="submit">Konto erstellen</button>
+                </form>
+            </section>
+
+            <section class="notice">
+                <h2>Security Notes &amp; Testing Guide</h2>
+                <p>Diese Demo verwendet echte Browser-Kryptografie, bleibt aber bewusst eine lokale SPA-Demo.</p>
+                <div class="stats" style="margin-top: 18px;">
+                    <div class="security-card">
+                        <h3>Hashing</h3>
+                        <p>Passwortfluss: Salt (16 Bytes) → SHA-256 → SHA-512. Nur der finale Hash wird gespeichert.</p>
+                    </div>
+                    <div class="security-card">
+                        <h3>AES-256</h3>
+                        <p>Sichere Notizen werden mit AES-256-GCM verschlüsselt und erst nach Passwortprüfung entschlüsselt.</p>
+                    </div>
+                    <div class="security-card">
+                        <h3>XSS / CSRF</h3>
+                        <p>Benutzernamen werden strikt validiert, UI schreibt per <code>textContent</code>, state-changing Aktionen prüfen einen Session-Token.</p>
+                    </div>
+                </div>
+                <ul class="hint-list" style="margin-top: 18px;">
+                    <li>Manueller Test: Admin registrieren → ausloggen → fünfmal falsches Passwort → Sperrlog prüfen.</li>
+                    <li>Node-Tests: <code>node --test auth.test.mjs</code></li>
+                    <li>Bestehende Python-Tests: <code>python test_tokenizers.py</code></li>
+                    <li>2FA-Hinweis: Ohne Backend wird hier nur ein Upgrade-Hinweis angezeigt, keine echte zweite Faktor-Verifikation.</li>
+                </ul>
+            </section>
+        </div>
+
+        <section id="dashboard" class="panel dashboard" style="margin-top: 24px;">
+            <div class="split" style="justify-content: space-between; align-items: center;">
+                <div>
+                    <h2>Benutzer-Dashboard</h2>
+                    <p id="welcomeText">Willkommen.</p>
+                </div>
+                <button id="logoutButton" class="danger" type="button">Logout</button>
+            </div>
+
+            <div class="stats" style="margin-top: 18px;">
+                <div>
+                    <strong>Aktive Session</strong>
+                    <p class="session-highlight" id="sessionExpires">-</p>
+                </div>
+                <div>
+                    <strong>Benutzerrolle</strong>
+                    <p id="sessionRole">-</p>
+                </div>
+                <div>
+                    <strong>CSRF-Token</strong>
+                    <p id="sessionCsrf">-</p>
+                </div>
+                <div>
+                    <strong>Secure Note</strong>
+                    <p id="secureNoteState">Nicht gesetzt</p>
+                </div>
+            </div>
+
+            <div class="grid" style="margin-top: 18px;">
+                <form id="noteForm" class="panel" novalidate>
+                    <h3>AES-256 Secure Note</h3>
+                    <p>Speichere sensible Daten verschlüsselt im Browser.</p>
+                    <input id="noteCsrf" class="sr-only" aria-hidden="true">
+                    <div class="form-grid stack">
+                        <div>
+                            <label for="notePassword">Passwort zur Ver- / Entschlüsselung</label>
+                            <input id="notePassword" type="password" autocomplete="current-password" required>
+                        </div>
+                        <div>
+                            <label for="secureNoteInput">Sichere Notiz</label>
+                            <textarea id="secureNoteInput" placeholder="Nur lokal gespeichert und AES-256-GCM verschlüsselt."></textarea>
+                        </div>
+                        <div class="button-row">
+                            <button id="saveNoteButton" type="submit">Verschlüsselt speichern</button>
+                            <button id="readNoteButton" type="button" class="secondary">Entschlüsseln</button>
+                        </div>
+                    </div>
+                </form>
+
+                <form id="passwordForm" class="panel" novalidate>
+                    <h3>Account Settings</h3>
+                    <p>Passwort ändern, Session erneuern und 2FA-Hinweis ansehen.</p>
+                    <input id="passwordCsrf" class="sr-only" aria-hidden="true">
+                    <div class="form-grid stack">
+                        <div>
+                            <label for="currentPassword">Aktuelles Passwort</label>
+                            <input id="currentPassword" type="password" autocomplete="current-password" required>
+                        </div>
+                        <div>
+                            <label for="newPassword">Neues Passwort</label>
+                            <input id="newPassword" type="password" autocomplete="new-password" required>
+                        </div>
+                        <div>
+                            <label for="confirmNewPassword">Neues Passwort bestätigen</label>
+                            <input id="confirmNewPassword" type="password" autocomplete="new-password" required>
+                        </div>
+                        <div class="button-row">
+                            <button id="passwordButton" type="submit">Passwort ändern</button>
+                            <button id="extendSessionButton" type="button" class="secondary">Session verlängern</button>
+                        </div>
+                        <div class="meta">
+                            <strong>2FA-Hinweis:</strong>
+                            <p>Für produktive Nutzung sollte diese Demo auf TOTP/WebAuthn mit Server-Speicherung erweitert werden.</p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section id="adminPanel" class="panel admin-panel" style="margin-top: 24px;">
+            <h2>Audit Trail</h2>
+            <p>Alle Auth-Ereignisse mit Benutzername, Status und Timestamp.</p>
+            <ul id="logList" class="log-list" aria-live="polite"></ul>
+        </section>
+
+        <div class="footer-row">
+            <span>Client-side Demo für GitHub Pages / Offline-Browser</span>
+            <a href="https://github.com/RFOF-NETWORK/rfof-network.github.ton" style="color: inherit;">Repository öffnen</a>
+        </div>
     </div>
 
-    <script>
-        // === CharTokenizer Implementation (JavaScript) ===
-        class CharTokenizer {
-            constructor() {
-                const buchstaben_gross = "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ";
-                const buchstaben_klein = "abcdefghijklmnopqrstuvwxyzäöüß";
-                const zahlen = "0123456789";
-                const sonderzeichen = " .,!?-_:;()[]{}'\"/\\@#$%&*+=<>\n";
-                
-                const alle_zeichen = buchstaben_gross + buchstaben_klein + zahlen + sonderzeichen;
-                
-                this.token_zu_id = {"<UNK>": 0};
-                this.id_zu_token = {0: "<UNK>"};
-                
-                const unique_chars = [...new Set(alle_zeichen)].sort();
-                let id = 1;
-                for (const char of unique_chars) {
-                    this.token_zu_id[char] = id;
-                    this.id_zu_token[id] = char;
-                    id++;
-                }
-                
-                this.vokabular_groesse = Object.keys(this.token_zu_id).length;
-            }
-            
-            encode(text) {
-                return text.split('').map(z => this.token_zu_id[z] !== undefined ? this.token_zu_id[z] : 0);
-            }
-            
-            decode(ids) {
-                return ids.map(i => this.id_zu_token[i] || "<UNK>").join('');
+    <script type="module">
+        import { AuthManager, authConfig, passwordStrength } from './auth.js';
+
+        const auth = new AuthManager();
+        const state = {
+            sessionTimer: null,
+            theme: localStorage.getItem('rfof_theme') || ''
+        };
+
+        const elements = {
+            banner: document.getElementById('banner'),
+            bannerText: document.getElementById('bannerText'),
+            bannerClose: document.getElementById('bannerClose'),
+            themeToggle: document.getElementById('themeToggle'),
+            showLogin: document.getElementById('showLogin'),
+            showRegister: document.getElementById('showRegister'),
+            loginForm: document.getElementById('loginForm'),
+            registerForm: document.getElementById('registerForm'),
+            registerPassword: document.getElementById('registerPassword'),
+            loginButton: document.getElementById('loginButton'),
+            registerButton: document.getElementById('registerButton'),
+            passwordStrengthBar: document.getElementById('passwordStrengthBar'),
+            passwordStrengthText: document.getElementById('passwordStrengthText'),
+            dashboard: document.getElementById('dashboard'),
+            adminPanel: document.getElementById('adminPanel'),
+            sessionDot: document.getElementById('sessionDot'),
+            sessionState: document.getElementById('sessionState'),
+            welcomeText: document.getElementById('welcomeText'),
+            sessionExpires: document.getElementById('sessionExpires'),
+            sessionRole: document.getElementById('sessionRole'),
+            sessionCsrf: document.getElementById('sessionCsrf'),
+            secureNoteState: document.getElementById('secureNoteState'),
+            logoutButton: document.getElementById('logoutButton'),
+            extendSessionButton: document.getElementById('extendSessionButton'),
+            passwordForm: document.getElementById('passwordForm'),
+            passwordButton: document.getElementById('passwordButton'),
+            noteForm: document.getElementById('noteForm'),
+            saveNoteButton: document.getElementById('saveNoteButton'),
+            readNoteButton: document.getElementById('readNoteButton'),
+            notePassword: document.getElementById('notePassword'),
+            secureNoteInput: document.getElementById('secureNoteInput'),
+            noteCsrf: document.getElementById('noteCsrf'),
+            passwordCsrf: document.getElementById('passwordCsrf'),
+            logList: document.getElementById('logList')
+        };
+
+        function showBanner(type, message) {
+            elements.banner.className = `banner show ${type}`;
+            elements.bannerText.textContent = message;
+        }
+
+        function hideBanner() {
+            elements.banner.className = 'banner';
+            elements.bannerText.textContent = '';
+        }
+
+        function setTheme(theme) {
+            if (theme) {
+                document.body.setAttribute('data-theme', theme);
+                localStorage.setItem('rfof_theme', theme);
+                state.theme = theme;
+            } else {
+                document.body.removeAttribute('data-theme');
+                localStorage.removeItem('rfof_theme');
+                state.theme = '';
             }
         }
 
-        // === BPETokenizer Implementation (JavaScript) ===
-        class BPETokenizer {
-            constructor(anzahl_merges = 20) {
-                this.anzahl_merges = anzahl_merges;
-                this.merge_regeln = [];
-            }
-            
-            static _wort_in_symbole(wort) {
-                return [...wort, "</w>"];
-            }
-            
-            trainieren(text, verbose = false) {
-                const woerter = text.split(" ").filter(w => w);
-                let wort_symbole = woerter.map(w => BPETokenizer._wort_in_symbole(w));
-                
-                for (let schritt = 0; schritt < this.anzahl_merges; schritt++) {
-                    const paar_haeufigkeit = {};
-                    
-                    for (const symbole of wort_symbole) {
-                        for (let i = 0; i < symbole.length - 1; i++) {
-                            const paar = symbole[i] + "|" + symbole[i + 1];
-                            paar_haeufigkeit[paar] = (paar_haeufigkeit[paar] || 0) + 1;
-                        }
-                    }
-                    
-                    if (Object.keys(paar_haeufigkeit).length === 0) break;
-                    
-                    const haeufigstes_paar = Object.entries(paar_haeufigkeit)
-                        .sort((a, b) => b[1] - a[1])[0];
-                    
-                    if (!haeufigstes_paar || haeufigstes_paar[1] < 2) break;
-                    
-                    const [paar_str, anzahl] = haeufigstes_paar;
-                    const [char1, char2] = paar_str.split("|");
-                    const neues_token = char1 + char2;
-                    
-                    this.merge_regeln.push([char1, char2]);
-                    
-                    wort_symbole = wort_symbole.map(symbole => {
-                        const neue_symbole = [];
-                        let i = 0;
-                        while (i < symbole.length) {
-                            if (i < symbole.length - 1 && symbole[i] === char1 && symbole[i + 1] === char2) {
-                                neue_symbole.push(neues_token);
-                                i += 2;
-                            } else {
-                                neue_symbole.push(symbole[i]);
-                                i++;
-                            }
-                        }
-                        return neue_symbole;
-                    });
-                    
-                    if (verbose) console.log(`Schritt ${schritt + 1}: ${paar_str} -> '${neues_token}'`);
-                }
-            }
-            
-            tokenisieren(wort) {
-                let symbole = BPETokenizer._wort_in_symbole(wort);
-                
-                for (const [char1, char2] of this.merge_regeln) {
-                    const neues_token = char1 + char2;
-                    const neue_symbole = [];
-                    let i = 0;
-                    while (i < symbole.length) {
-                        if (i < symbole.length - 1 && symbole[i] === char1 && symbole[i + 1] === char2) {
-                            neue_symbole.push(neues_token);
-                            i += 2;
-                        } else {
-                            neue_symbole.push(symbole[i]);
-                            i++;
-                        }
-                    }
-                    symbole = neue_symbole;
-                }
-                
-                return symbole;
-            }
+        function updatePasswordMeter() {
+            const result = passwordStrength(elements.registerPassword.value);
+            const width = `${(result.score / 5) * 100}%`;
+            const color = result.score <= 2 ? 'var(--danger)' : result.score === 3 ? 'var(--warning)' : 'var(--success)';
+            elements.passwordStrengthBar.style.width = width;
+            elements.passwordStrengthBar.style.background = color;
+            elements.passwordStrengthText.textContent = `${result.label} (${result.score}/5)`;
+            document.getElementById('checkLength').style.color = result.checks.length ? 'var(--success)' : 'var(--muted)';
+            document.getElementById('checkUpper').style.color = result.checks.uppercase ? 'var(--success)' : 'var(--muted)';
+            document.getElementById('checkNumber').style.color = result.checks.number ? 'var(--success)' : 'var(--muted)';
+            document.getElementById('checkSpecial').style.color = result.checks.special ? 'var(--success)' : 'var(--muted)';
         }
 
-        // === Global State ===
-        let charTokenizer = new CharTokenizer();
-        let bpeTokenizer = new BPETokenizer();
+        function switchTab(tab) {
+            const login = tab === 'login';
+            elements.loginForm.hidden = !login;
+            elements.registerForm.hidden = login;
+            elements.showLogin.className = login ? 'active' : 'secondary';
+            elements.showRegister.className = login ? 'secondary' : 'active';
+        }
 
-        // === CharTokenizer Functions ===
-        function tokenizeChar() {
-            const text = document.getElementById('charInput').value;
-            
-            if (!text.trim()) {
-                showError('charResult', 'Bitte geben Sie einen Text ein!');
+        function renderLogs() {
+            const logs = auth.getVisibleLogs();
+            elements.logList.replaceChildren();
+            if (!logs.length) {
+                const emptyItem = document.createElement('li');
+                emptyItem.className = 'log-entry';
+                emptyItem.textContent = 'Noch keine Logs vorhanden.';
+                elements.logList.append(emptyItem);
                 return;
             }
-            
-            try {
-                const ids = charTokenizer.encode(text);
-                const decoded = charTokenizer.decode(ids);
-                const isCorrect = decoded === text;
-                
-                const output = `<strong>Original:</strong> "${text}"<br>
-                               <strong>Token IDs:</strong> [${ids.join(', ')}]<br>
-                               <strong>Dekodiert:</strong> "${decoded}"<br>
-                               <strong>Korrekt?</strong> ${isCorrect ? '✅ Ja' : '❌ Nein'}`;
-                
-                document.getElementById('charOutput').innerHTML = output;
-                document.getElementById('charCount').textContent = text.length;
-                document.getElementById('charTokenCount').textContent = ids.length;
-                
-                const tokenVisualization = ids.map((id, idx) => 
-                    `<span class="token" title="ID: ${id}">${text[idx]} (${id})</span>`
-                ).join('');
-                document.getElementById('charTokens').innerHTML = tokenVisualization;
-                
-                document.getElementById('charResult').classList.add('show');
-            } catch (error) {
-                showError('charResult', `Fehler: ${error.message}`);
-            }
-        }
-
-        // === BPETokenizer Functions ===
-        function trainBPE() {
-            const trainText = document.getElementById('bpeTraining').value;
-            const merges = parseInt(document.getElementById('bpeMerges').value);
-            
-            if (!trainText.trim()) {
-                showError('bpeResult', 'Bitte geben Sie einen Trainingstext ein!');
-                return;
-            }
-            
-            try {
-                bpeTokenizer = new BPETokenizer(merges);
-                bpeTokenizer.trainieren(trainText);
-                
-                const output = `<strong>Trainiert mit:</strong> "${trainText}"<br>
-                               <strong>Merge-Regeln gelernt:</strong> ${bpeTokenizer.merge_regeln.length}<br>
-                               <strong>Regeln:</strong> ${bpeTokenizer.merge_regeln.map(r => `'${r.join("")}'`).join(', ') || 'Keine'}`;
-                
-                document.getElementById('bpeOutput').innerHTML = output;
-                document.getElementById('bpeMergeCount').textContent = bpeTokenizer.merge_regeln.length;
-                document.getElementById('bpeTokenCount').textContent = '0';
-                document.getElementById('bpeTokens').innerHTML = '';
-                
-                document.getElementById('bpeResult').classList.add('show');
-            } catch (error) {
-                showError('bpeResult', `Fehler beim Training: ${error.message}`);
-            }
-        }
-
-        function tokenizeBPE() {
-            const word = document.getElementById('bpeInput').value;
-            
-            if (!word.trim()) {
-                showError('bpeResult', 'Bitte geben Sie ein Wort ein!');
-                return;
-            }
-            
-            if (bpeTokenizer.merge_regeln.length === 0) {
-                showError('bpeResult', 'Bitte trainieren Sie zuerst das Modell!');
-                return;
-            }
-            
-            try {
-                const tokens = bpeTokenizer.tokenisieren(word);
-                
-                const output = `<strong>Wort:</strong> "${word}"<br>
-                               <strong>Tokens:</strong> [${tokens.map(t => `'${t}'`).join(', ')}]<br>
-                               <strong>Anzahl Tokens:</strong> ${tokens.length}`;
-                
-                document.getElementById('bpeOutput').innerHTML = output;
-                document.getElementById('bpeTokenCount').textContent = tokens.length;
-                
-                const tokenVisualization = tokens.map(token => 
-                    `<span class="token">${token}</span>`
-                ).join('');
-                document.getElementById('bpeTokens').innerHTML = tokenVisualization;
-                
-                document.getElementById('bpeResult').classList.add('show');
-            } catch (error) {
-                showError('bpeResult', `Fehler: ${error.message}`);
-            }
-        }
-
-        // === Helper Functions ===
-        function showError(elementId, message) {
-            const resultElement = document.getElementById(elementId);
-            resultElement.classList.add('show', 'error');
-            resultElement.querySelector('.result-content').innerHTML = `<strong>⚠️ ${message}</strong>`;
-        }
-
-        // === Auto-tokenize on Enter ===
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('charInput').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && e.ctrlKey) tokenizeChar();
+            logs.forEach((entry) => {
+                const item = document.createElement('li');
+                item.className = 'log-entry';
+                const headline = document.createElement('strong');
+                headline.textContent = `${entry.action} · ${entry.status}`;
+                const meta = document.createElement('span');
+                meta.textContent = `${entry.username} · ${new Date(entry.timestamp).toLocaleString('de-DE')}`;
+                const details = document.createElement('span');
+                details.textContent = entry.details;
+                item.append(headline, meta, details);
+                elements.logList.append(item);
             });
-            
-            document.getElementById('bpeInput').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && e.ctrlKey) tokenizeBPE();
+        }
+
+        function renderSession() {
+            const session = auth.getSessionSummary();
+            const online = Boolean(session);
+            elements.sessionDot.className = `dot ${online ? 'online' : 'offline'}`;
+            elements.sessionState.textContent = online ? 'Angemeldet' : 'Nicht angemeldet';
+            elements.dashboard.classList.toggle('show', online);
+            elements.adminPanel.classList.toggle('show', Boolean(session && session.role === 'admin'));
+
+            if (!online) {
+                elements.welcomeText.textContent = 'Bitte anmelden oder registrieren.';
+                elements.sessionExpires.textContent = '-';
+                elements.sessionRole.textContent = '-';
+                elements.sessionCsrf.textContent = '-';
+                elements.secureNoteState.textContent = 'Nicht gesetzt';
+                renderLogs();
+                return;
+            }
+
+            elements.welcomeText.textContent = `Willkommen ${session.username}. Deine Sitzung wird automatisch nach ${Math.round(authConfig.sessionTimeoutMs / 60000)} Minuten Inaktivität beendet.`;
+            elements.sessionRole.textContent = session.role;
+            elements.sessionCsrf.textContent = `${session.csrfToken.slice(0, 14)}…`;
+            elements.noteCsrf.value = session.csrfToken;
+            elements.passwordCsrf.value = session.csrfToken;
+            elements.secureNoteState.textContent = session.secureNoteConfigured ? 'Verschlüsselt gespeichert' : 'Nicht gesetzt';
+            renderLogs();
+            updateSessionCountdown();
+        }
+
+        function updateSessionCountdown() {
+            const session = auth.getSessionSummary();
+            if (!session) {
+                elements.sessionExpires.textContent = '-';
+                return;
+            }
+            const remainingMs = Math.max(0, session.expiresAt - Date.now());
+            if (remainingMs === 0) {
+                showBanner('info', 'Session automatisch beendet. Bitte erneut anmelden.');
+                renderSession();
+                return;
+            }
+            const minutes = Math.floor(remainingMs / 60000);
+            const seconds = Math.floor((remainingMs % 60000) / 1000);
+            elements.sessionExpires.textContent = `${minutes}m ${String(seconds).padStart(2, '0')}s verbleibend`;
+        }
+
+        async function withLoading(button, action) {
+            const originalLabel = button.textContent;
+            button.disabled = true;
+            button.textContent = 'Bitte warten…';
+            try {
+                await action();
+            } catch (error) {
+                showBanner('error', error.message || 'Unbekannter Fehler.');
+            } finally {
+                button.disabled = false;
+                button.textContent = originalLabel;
+                renderSession();
+            }
+        }
+
+        function touchAuthenticatedSession() {
+            if (auth.getSession()) {
+                auth.touchSession();
+                updateSessionCountdown();
+            }
+        }
+
+        elements.bannerClose.addEventListener('click', hideBanner);
+        elements.showLogin.addEventListener('click', () => switchTab('login'));
+        elements.showRegister.addEventListener('click', () => switchTab('register'));
+        elements.registerPassword.addEventListener('input', updatePasswordMeter);
+
+        elements.themeToggle.addEventListener('click', () => {
+            const nextTheme = state.theme === 'light' ? 'dark' : state.theme === 'dark' ? '' : 'light';
+            setTheme(nextTheme);
+        });
+
+        elements.loginForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            withLoading(elements.loginButton, async () => {
+                const form = new FormData(elements.loginForm);
+                await auth.login(form.get('username'), form.get('password'));
+                elements.loginForm.reset();
+                showBanner('success', 'Login erfolgreich.');
             });
         });
+
+        elements.registerForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            withLoading(elements.registerButton, async () => {
+                const form = new FormData(elements.registerForm);
+                await auth.register(form.get('username'), form.get('password'), form.get('confirmPassword'));
+                elements.registerForm.reset();
+                updatePasswordMeter();
+                showBanner('success', 'Registrierung erfolgreich. Du bist jetzt angemeldet.');
+            });
+        });
+
+        elements.logoutButton.addEventListener('click', () => {
+            withLoading(elements.logoutButton, async () => {
+                auth.logout(elements.noteCsrf.value, 'Manueller Logout');
+                elements.passwordForm.reset();
+                elements.noteForm.reset();
+                showBanner('info', 'Logout erfolgreich. Session-Daten wurden entfernt.');
+            });
+        });
+
+        elements.extendSessionButton.addEventListener('click', () => {
+            const session = auth.touchSession();
+            if (session) {
+                renderSession();
+                showBanner('success', 'Session verlängert.');
+            }
+        });
+
+        elements.passwordForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            withLoading(elements.passwordButton, async () => {
+                await auth.changePassword(
+                    document.getElementById('currentPassword').value,
+                    document.getElementById('newPassword').value,
+                    document.getElementById('confirmNewPassword').value,
+                    elements.passwordCsrf.value
+                );
+                elements.passwordForm.reset();
+                showBanner('success', 'Passwort erfolgreich geändert und Session erneuert.');
+            });
+        });
+
+        elements.noteForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            withLoading(elements.saveNoteButton, async () => {
+                await auth.saveSecureNote(
+                    elements.notePassword.value,
+                    elements.secureNoteInput.value,
+                    elements.noteCsrf.value
+                );
+                showBanner('success', 'Sichere Notiz verschlüsselt gespeichert.');
+            });
+        });
+
+        elements.readNoteButton.addEventListener('click', () => {
+            withLoading(elements.readNoteButton, async () => {
+                const plainText = await auth.readSecureNote(elements.notePassword.value);
+                elements.secureNoteInput.value = plainText;
+                showBanner('success', 'Sichere Notiz erfolgreich entschlüsselt.');
+            });
+        });
+
+        ['click', 'keydown', 'mousemove', 'touchstart'].forEach((eventName) => {
+            document.addEventListener(eventName, touchAuthenticatedSession, { passive: true });
+        });
+
+        if (state.theme) {
+            setTheme(state.theme);
+        }
+
+        switchTab('login');
+        updatePasswordMeter();
+        renderSession();
+        state.sessionTimer = window.setInterval(() => {
+            updateSessionCountdown();
+            renderSession();
+        }, 1000);
     </script>
 </body>
 </html>
