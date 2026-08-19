@@ -1,11 +1,17 @@
 # rfof-network.github.ton
+
+[![CI](https://github.com/RFOF-NETWORK/rfof-network.github.ton/actions/workflows/ci.yml/badge.svg)](https://github.com/RFOF-NETWORK/rfof-network.github.ton/actions/workflows/ci.yml)
+[![Deploy to GitHub Pages](https://github.com/RFOF-NETWORK/rfof-network.github.ton/actions/workflows/pages.yml/badge.svg)](https://github.com/RFOF-NETWORK/rfof-network.github.ton/actions/workflows/pages.yml)
+
 PRAIAI[Copilot(PRAI[Gemini/GoogleAI{Deepseek}]GPT) #BlueDeepGold macht alles nutzbar in GitHub von RFOF-NETWORK.
 Mit eigener Python Paket Reihe v0.0.1 [multi_spark_tokenizer_python_paket](https://github.com/RFOF-NETWORK/rfof-network.github.ton/new/main?filename=.github%2Fworkflows%2Fpython-publish.yml&workflow_template=ci%2Fpython-publish)
 
 ## Live Demo & Docs
 
-- Live Demo (GitHub Pages): `https://rfof-network.github.io/rfof-network.github.ton/`
-- Projektdoku: [`docs/README.md`](docs/README.md)
+- 🌐 **Live Demo (GitHub Pages):** <https://RFOF-NETWORK.github.io/rfof-network.github.ton/>
+- 📖 Projektdoku: [`docs/README.md`](docs/README.md)
+- 🚀 Deployment-Guide: [`DEPLOYMENT.md`](DEPLOYMENT.md)
+- 🔐 Security-Policy: [`SECURITY.md`](SECURITY.md)
 
 # Mein Tokenizer-Projekt
 

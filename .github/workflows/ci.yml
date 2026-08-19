@@ -21,6 +21,11 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -31,6 +36,9 @@ jobs:
 
       - name: Run security and web3 tests
         run: python test_security_web3.py
+
+      - name: Run auth JS tests
+        run: node --test auth.test.mjs
 
       - name: Success message
         if: success()
