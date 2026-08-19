@@ -446,6 +446,7 @@
             <button type="button" id="navWallet" class="secondary" hidden>💎 Wallet</button>
             <button type="button" id="navExplorer" class="secondary" hidden>🔍 Explorer</button>
             <button type="button" id="navRapp" class="secondary" hidden>🛒 rApp Store</button>
+            <button type="button" id="navMtkNec" class="secondary" hidden>💱 MTK/NEC</button>
             <button type="button" id="navSettings" class="secondary" hidden>⚙️ Settings</button>
             <button type="button" id="navAdmin" class="secondary" hidden>🛡️ Admin</button>
             <span class="nav-sep"></span>
@@ -949,8 +950,147 @@
         </div>
     </section>
 
+    <!-- ── MTK/NEC Economy Section ── -->
+    <section id="mtkNecSection" class="panel" style="display:none;margin-top:24px;">
+        <h2>💱 MTK-NEC Layer-7 Wirtschaft</h2>
+        <p style="margin-bottom:16px;">Perpetual Escrow · 6 Layer · 4 Richtungen · NEC-Rabatt · 5 Blätter</p>
+
+        <!-- Layer calculator -->
+        <div class="split" style="gap:18px;flex-wrap:wrap;">
+            <div class="panel" style="flex:1;min-width:260px;padding:16px;">
+                <h3 style="margin-bottom:12px;">⚙️ Layer-Rechner</h3>
+                <label for="mtkBaseAmount">Basis-MTK Betrag</label>
+                <input id="mtkBaseAmount" type="number" value="100" min="0" step="0.01" style="width:100%;margin-top:4px;background:var(--surface-strong);border:1px solid var(--border);border-radius:10px;padding:8px 10px;color:var(--text);">
+                <label for="mtkSteps" style="margin-top:10px;display:block;">Schritte (×2 pro Schritt)</label>
+                <input id="mtkSteps" type="number" value="1" min="0" max="30" style="width:100%;margin-top:4px;background:var(--surface-strong);border:1px solid var(--border);border-radius:10px;padding:8px 10px;color:var(--text);">
+                <label for="mtkDiscount" style="margin-top:10px;display:block;">NEC Rabatt %</label>
+                <input id="mtkDiscount" type="number" value="25" min="0" max="70" style="width:100%;margin-top:4px;background:var(--surface-strong);border:1px solid var(--border);border-radius:10px;padding:8px 10px;color:var(--text);">
+                <button id="mtkCalcBtn" style="margin-top:14px;width:100%;">Berechnen</button>
+            </div>
+            <div class="panel" style="flex:2;min-width:280px;padding:16px;">
+                <h3 style="margin-bottom:10px;">📊 Werte-Logik (Sheet 3)</h3>
+                <pre id="mtkLayerResult" style="background:var(--surface);border-radius:10px;padding:12px;font-size:0.82rem;overflow:auto;min-height:160px;white-space:pre-wrap;"></pre>
+            </div>
+        </div>
+
+        <!-- NEC Discount: Dice + RPS -->
+        <div class="split" style="gap:18px;flex-wrap:wrap;margin-top:18px;">
+            <div class="panel" style="flex:1;min-width:220px;padding:16px;">
+                <h3 style="margin-bottom:10px;">🎲 Würfel-Rabatt</h3>
+                <p style="font-size:0.88rem;">Würfle automatisch (1–6) → 50 % ± (Augenzahl × 5 %)</p>
+                <button id="necDiceBtn" style="margin-top:10px;width:100%;">Würfeln</button>
+                <pre id="necDiceResult" style="background:var(--surface);border-radius:10px;padding:10px;margin-top:10px;font-size:0.82rem;"></pre>
+            </div>
+            <div class="panel" style="flex:1;min-width:220px;padding:16px;">
+                <h3 style="margin-bottom:10px;">✂️ Schnick-Schnack-Schnuck</h3>
+                <p style="font-size:0.88rem;">Wähle 3 Runden (Sieg/Unentschieden/Niederlage)</p>
+                <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+                    <select id="rps0" style="flex:1;background:var(--surface-strong);border:1px solid var(--border);border-radius:8px;padding:6px;color:var(--text);">
+                        <option value="win">Sieg</option><option value="draw">Unentschieden</option><option value="loss">Niederlage</option>
+                    </select>
+                    <select id="rps1" style="flex:1;background:var(--surface-strong);border:1px solid var(--border);border-radius:8px;padding:6px;color:var(--text);">
+                        <option value="win">Sieg</option><option value="draw">Unentschieden</option><option value="loss">Niederlage</option>
+                    </select>
+                    <select id="rps2" style="flex:1;background:var(--surface-strong);border:1px solid var(--border);border-radius:8px;padding:6px;color:var(--text);">
+                        <option value="win">Sieg</option><option value="draw">Unentschieden</option><option value="loss">Niederlage</option>
+                    </select>
+                </div>
+                <button id="necRpsBtn" style="margin-top:10px;width:100%;">Auswerten</button>
+                <pre id="necRpsResult" style="background:var(--surface);border-radius:10px;padding:10px;margin-top:10px;font-size:0.82rem;"></pre>
+            </div>
+        </div>
+
+        <!-- Perpetual Escrow / Direction calculator -->
+        <div class="panel" style="padding:16px;margin-top:18px;">
+            <h3 style="margin-bottom:12px;">🔒 Perpetual Escrow / 4 Richtungen</h3>
+            <div class="split" style="gap:12px;flex-wrap:wrap;">
+                <div style="flex:1;min-width:180px;">
+                    <label for="escrowAmount">Betrag (MTK)</label>
+                    <input id="escrowAmount" type="number" value="1000" min="0" style="width:100%;margin-top:4px;background:var(--surface-strong);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);">
+                </div>
+                <div style="flex:1;min-width:140px;">
+                    <label for="escrowDirection">Richtung</label>
+                    <select id="escrowDirection" style="width:100%;margin-top:4px;background:var(--surface-strong);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);">
+                        <option value="A→C">A→C (MTK→NEC, 3D→2D)</option>
+                        <option value="C→A">C→A (NEC→MTK, 2D→3D)</option>
+                        <option value="B→D">B→D (Spiegel→NEC, 1D→2D)</option>
+                        <option value="D→B">D→B (NEC→Spiegel, 2D→1D)</option>
+                    </select>
+                </div>
+                <div style="flex:1;min-width:120px;">
+                    <label for="escrowDiscount">Rabatt %</label>
+                    <input id="escrowDiscount" type="number" value="20" min="0" max="50" style="width:100%;margin-top:4px;background:var(--surface-strong);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);">
+                </div>
+                <div style="flex:1;min-width:120px;">
+                    <label for="escrowTimeline">Zeitlinie</label>
+                    <select id="escrowTimeline" style="width:100%;margin-top:4px;background:var(--surface-strong);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);">
+                        <option value="1D">1D (Familie, ×0.5)</option>
+                        <option value="2D">2D (System, ×1.0)</option>
+                        <option value="3D" selected>3D (Nutzer, ×2.0)</option>
+                    </select>
+                </div>
+            </div>
+            <button id="escrowCalcBtn" style="margin-top:14px;">Escrow berechnen</button>
+            <pre id="escrowResult" style="background:var(--surface);border-radius:10px;padding:12px;margin-top:12px;font-size:0.82rem;white-space:pre-wrap;"></pre>
+        </div>
+
+        <!-- Sheet 4: Vertrag generator -->
+        <div class="panel" style="padding:16px;margin-top:18px;">
+            <h3 style="margin-bottom:12px;">📄 Sheet 4 — Universalvertrag</h3>
+            <div class="split" style="gap:12px;flex-wrap:wrap;">
+                <div style="flex:1;min-width:140px;">
+                    <label for="contractSeller">Verkäufer</label>
+                    <input id="contractSeller" value="Person1" style="width:100%;margin-top:4px;background:var(--surface-strong);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);">
+                </div>
+                <div style="flex:1;min-width:140px;">
+                    <label for="contractBuyer">Käufer</label>
+                    <input id="contractBuyer" value="Person2" style="width:100%;margin-top:4px;background:var(--surface-strong);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);">
+                </div>
+                <div style="flex:1;min-width:160px;">
+                    <label for="contractItem">Artikel</label>
+                    <input id="contractItem" value="Flohmarkt-Artikel" style="width:100%;margin-top:4px;background:var(--surface-strong);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);">
+                </div>
+                <div style="flex:1;min-width:120px;">
+                    <label for="contractMTK">MTK Betrag</label>
+                    <input id="contractMTK" type="number" value="500" style="width:100%;margin-top:4px;background:var(--surface-strong);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);">
+                </div>
+            </div>
+            <button id="contractGenBtn" style="margin-top:14px;">Vertrag generieren</button>
+            <pre id="contractResult" style="background:var(--surface);border-radius:10px;padding:12px;margin-top:12px;font-size:0.82rem;white-space:pre-wrap;overflow:auto;max-height:300px;"></pre>
+        </div>
+
+        <!-- SI Prefix / 30K Axiom quick-reference -->
+        <div class="split" style="gap:18px;flex-wrap:wrap;margin-top:18px;">
+            <div class="panel" style="flex:1;min-width:240px;padding:16px;">
+                <h3 style="margin-bottom:8px;">📏 30K-Axiom</h3>
+                <label for="axiom30kInput">Betrag (beliebig)</label>
+                <input id="axiom30kInput" type="number" value="30000" style="width:100%;margin-top:4px;background:var(--surface-strong);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);">
+                <button id="axiom30kBtn" style="margin-top:10px;width:100%;">Berechnen</button>
+                <pre id="axiom30kResult" style="background:var(--surface);border-radius:10px;padding:10px;margin-top:10px;font-size:0.82rem;"></pre>
+            </div>
+            <div class="panel" style="flex:2;min-width:240px;padding:16px;overflow-x:auto;">
+                <h3 style="margin-bottom:8px;">🔬 SI-Präfixe (10⁻³⁰ … 10⁺³⁰)</h3>
+                <table id="siTable" style="width:100%;border-collapse:collapse;font-size:0.8rem;">
+                    <thead><tr style="color:var(--muted);">
+                        <th style="text-align:left;padding:4px 8px;">Potenz</th>
+                        <th style="padding:4px 8px;">Symbol</th>
+                        <th style="padding:4px 8px;">Name</th>
+                        <th style="text-align:right;padding:4px 8px;">Wert</th>
+                    </tr></thead>
+                    <tbody id="siTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <script type="module">
         import { AuthManager, authConfig, passwordStrength } from './auth.js';
+        import {
+            layerA_mtkGrowth, layerB_mirrorMTK, layerC_necDiscount,
+            layerF_normalosMTK, necDiscountDice, necDiscountRPS,
+            perpetualEscrow, sheet3WertLogik, sheet4Vertrag,
+            apply30KAxiom, SI_PREFIXES,
+        } from './mtk-nec-economy.js';
 
         const auth = new AuthManager();
         const state = {
@@ -1339,12 +1479,12 @@
         // ─── Helper: show/hide main views ─────────────────────────────────
 
         const VIEWS = ['loginArea', 'walletSection', 'settingsSection',
-                       'explorerSection', 'rappSection', 'dashboard', 'adminPanel'];
+                       'explorerSection', 'rappSection', 'mtkNecSection', 'dashboard', 'adminPanel'];
 
         function showView(name) {
             const loginArea = document.querySelector('.grid');  // login+notice grid
             if (loginArea) loginArea.style.display = name === 'loginArea' ? '' : 'none';
-            ['walletSection','settingsSection','explorerSection','rappSection'].forEach((id) => {
+            ['walletSection','settingsSection','explorerSection','rappSection','mtkNecSection'].forEach((id) => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = id === name ? '' : 'none';
             });
@@ -1358,7 +1498,7 @@
 
         function updateNavBar(session) {
             const loggedIn = Boolean(session);
-            ['navHome','navWallet','navExplorer','navRapp','navSettings','navAdmin'].forEach((id) => {
+            ['navHome','navWallet','navExplorer','navRapp','navMtkNec','navSettings','navAdmin'].forEach((id) => {
                 const btn = document.getElementById(id);
                 if (btn) btn.hidden = !loggedIn;
             });
@@ -1374,6 +1514,7 @@
         document.getElementById('navWallet')?.addEventListener('click', () => { showView('walletSection'); renderWallet(); });
         document.getElementById('navExplorer')?.addEventListener('click', () => { showView('explorerSection'); renderExplorer(); });
         document.getElementById('navRapp')?.addEventListener('click', () => { showView('rappSection'); renderRappStore('rappRowMain', ''); });
+        document.getElementById('navMtkNec')?.addEventListener('click', () => { showView('mtkNecSection'); initMtkNecSection(); });
         document.getElementById('navSettings')?.addEventListener('click', () => { showView('settingsSection'); renderSettingsState(); });
         document.getElementById('navAdmin')?.addEventListener('click', () => { showView('adminPanel'); });
         document.getElementById('navLogin')?.addEventListener('click', () => showView('loginArea'));
@@ -1904,6 +2045,90 @@
                 fpState.contact = null; fpState.token = null;
             });
         });
+
+        // ─── MTK/NEC Economy Section ────────────────────────────────────────
+
+        let mtkNecInitialized = false;
+
+        function initMtkNecSection() {
+            if (!mtkNecInitialized) {
+                // Build SI prefix table
+                const tbody = document.getElementById('siTableBody');
+                if (tbody) {
+                    SI_PREFIXES.forEach(({ exp, symbol, name, value }) => {
+                        const tr = document.createElement('tr');
+                        tr.style.borderTop = '1px solid var(--border)';
+                        tr.innerHTML = `
+                            <td style="padding:3px 8px;">10<sup>${exp}</sup></td>
+                            <td style="text-align:center;padding:3px 8px;">${symbol || '—'}</td>
+                            <td style="text-align:center;padding:3px 8px;">${name}</td>
+                            <td style="text-align:right;padding:3px 8px;font-family:monospace;">${value.toExponential(0)}</td>`;
+                        tbody.appendChild(tr);
+                    });
+                }
+                mtkNecInitialized = true;
+            }
+
+            // Layer calculator
+            document.getElementById('mtkCalcBtn')?.addEventListener('click', () => {
+                const base = parseFloat(document.getElementById('mtkBaseAmount')?.value) || 100;
+                const steps = parseInt(document.getElementById('mtkSteps')?.value, 10) || 1;
+                const disc = parseFloat(document.getElementById('mtkDiscount')?.value) || 0;
+                const res = sheet3WertLogik(base, steps, disc);
+                document.getElementById('mtkLayerResult').textContent = JSON.stringify(res, null, 2);
+            });
+
+            // Dice
+            document.getElementById('necDiceBtn')?.addEventListener('click', () => {
+                const res = necDiscountDice();
+                document.getElementById('necDiceResult').textContent =
+                    `Augenzahl: ${res.roll}\nRabatt (roh): ${res.rawPercent} %\nRabatt (begrenzt): ${res.clampedPercent} %`;
+            });
+
+            // RPS
+            document.getElementById('necRpsBtn')?.addEventListener('click', () => {
+                const r = ['rps0','rps1','rps2'].map((id) => document.getElementById(id)?.value || 'draw');
+                const res = necDiscountRPS(r);
+                document.getElementById('necRpsResult').textContent =
+                    `Runden: ${r.join(', ')}\nPunkte gesamt: ${res.totalPoints}\nRabatt: ${res.discountPercent} %`;
+            });
+
+            // Escrow
+            document.getElementById('escrowCalcBtn')?.addEventListener('click', () => {
+                const amount = parseFloat(document.getElementById('escrowAmount')?.value) || 1000;
+                const dir = document.getElementById('escrowDirection')?.value || 'A→C';
+                const disc = parseFloat(document.getElementById('escrowDiscount')?.value) || 0;
+                const tl = document.getElementById('escrowTimeline')?.value || '3D';
+                try {
+                    const res = perpetualEscrow(amount, dir, disc, tl);
+                    document.getElementById('escrowResult').textContent = JSON.stringify(res, null, 2);
+                } catch (e) {
+                    document.getElementById('escrowResult').textContent = `Fehler: ${e.message}`;
+                }
+            });
+
+            // Contract / Sheet 4
+            document.getElementById('contractGenBtn')?.addEventListener('click', () => {
+                const contract = sheet4Vertrag({
+                    seller: document.getElementById('contractSeller')?.value || 'Person1',
+                    buyer:  document.getElementById('contractBuyer')?.value  || 'Person2',
+                    item:   document.getElementById('contractItem')?.value   || 'Artikel',
+                    mtkAmount: parseFloat(document.getElementById('contractMTK')?.value) || 500,
+                    discountPercent: 0,
+                    direction: 'A→C',
+                    timeline: '3D',
+                });
+                document.getElementById('contractResult').textContent = JSON.stringify(contract, null, 2);
+            });
+
+            // 30K Axiom
+            document.getElementById('axiom30kBtn')?.addEventListener('click', () => {
+                const val = parseFloat(document.getElementById('axiom30kInput')?.value) || 30000;
+                const res = apply30KAxiom(val);
+                document.getElementById('axiom30kResult').textContent =
+                    `Vor Komma  (×0.9967): ${res.integer.toFixed(4)}\nNach Komma (×0.0367): ${res.fractional.toFixed(4)}\nGesamt:               ${res.total.toFixed(4)}`;
+            });
+        }
 
         // ─── Close modals on backdrop click ─────────────────────────────────
 
