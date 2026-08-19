@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RFOF-NETWORK Auth &amp; Security Demo</title>
+    <title>RFOF-NETWORK – Electrotronix Wallet</title>
     <style>
         :root {
             color-scheme: dark;
@@ -434,7 +434,14 @@
         .dna-cell { width: 24px; height: 24px; border-radius: 4px; background: var(--accent); opacity: 0.25; }
         .dna-cell.hot { opacity: 1; background: var(--danger); }
         .dna-cell.warm { opacity: 0.65; background: var(--warning); }
+
+        /* ── Top-nav login badge compact ── */
+        .nav-login-badge { font-size: 0.8rem; padding: 3px 10px; border-radius: 8px; background: var(--surface-strong); border: 1px solid var(--border); white-space: nowrap; }
     </style>
+
+    <!-- ── CDN Libraries ── -->
+    <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
     <div class="shell">
@@ -2254,5 +2261,7 @@
                 }, 1000);
             });
     </script>
+    <!-- ── RFOF Wallet Core Extension ── -->
+    <script type="module" src="./wallet-core.js"></script>
 </body>
 </html>
