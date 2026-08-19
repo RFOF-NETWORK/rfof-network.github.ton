@@ -1,3 +1,5 @@
+import { BIP39_WORDLIST, BIP39_WORD_COUNT } from './bip39_wordlist.js';
+
 const textEncoder = new TextEncoder();
 const USERS_KEY = 'rfof_auth_users_v1';
 const SESSION_KEY = 'rfof_auth_session_v1';
@@ -809,7 +811,7 @@ export class AuthManager {
             : '****';
         this._appendLog('2FA_SEND', 'success', 'system',
             `${channel} → ${masked} (demo-mode)`);
-        return { channel, contact, code };
+        return { channel, contact };
     }
 
     verifyTwoFACode(userCode, storedCode) {
@@ -877,7 +879,7 @@ export class AuthManager {
         if (!user) {
             // Deliberate vague response to prevent user enumeration
             this._appendLog('FORGOT_PASSWORD', 'info', 'anonymous',
-                `Recovery requested for unknown contact: ${emailOrPhone}`);
+                'Recovery requested for unrecognised contact');
             return { sent: true };
         }
         const code = this.generateTwoFACode();
@@ -1000,38 +1002,13 @@ export class AuthManager {
         const session = this._validateStateToken(csrfToken);
         const user = this.getUser(session.username);
         if (!user.seedPhrase) {
-            // BIP-39 word list excerpt — 2048 words needed for real BIP-39;
-            // this demo uses 24 words drawn from crypto-random indices so each
-            // user gets a unique phrase that is NOT shared with any other user.
-            const WORD_LIST = [
-                'abandon','ability','able','about','above','absent','absorb','abstract',
-                'absurd','abuse','access','accident','account','accuse','achieve','acid',
-                'acoustic','acquire','across','act','action','actor','actress','actual',
-                'adapt','add','addict','address','adjust','admit','adult','advance',
-                'advice','aerobic','afford','afraid','again','age','agent','agree',
-                'ahead','aim','air','airport','aisle','alarm','album','alcohol',
-                'alert','alien','all','alley','allow','almost','alone','alpha',
-                'already','also','alter','always','amateur','amazing','among','amount',
-                'amused','analyst','anchor','ancient','anger','angle','angry','animal',
-                'ankle','announce','annual','another','answer','antenna','antique','anxiety',
-                'apart','april','arch','arctic','area','arena','argue','arm',
-                'armed','armor','army','around','arrange','arrest','arrive','arrow',
-                'art','artefact','artist','artwork','ask','aspect','assault','asset',
-                'assist','assume','asthma','athlete','atom','attack','attend','attract',
-                'auction','audit','august','aunt','author','auto','autumn','average',
-                'avocado','avoid','awake','aware','away','awesome','awful','awkward',
-                'axis','baby','balance','bamboo','banana','banner','barely','bargain',
-                'barrel','basic','basket','battle','beach','bean','beauty','become',
-                'beef','begin','behave','behind','believe','below','bench','benefit',
-                'best','betray','better','between','beyond','bicycle','bid','bike',
-                'bind','biology','bird','birth','bitter','black','blade','blame',
-                'blanket','blast','bleak','bless','blind','blood','blossom','blouse'
-            ];
-            const randomBytes = new Uint8Array(12 * 2); // 2 bytes per word → up to 65536 words
+            // Use the full 2048-word BIP-39 list for proper 132-bit entropy
+            // (11 bits × 12 words).
+            const randomBytes = new Uint8Array(12 * 2); // 2 bytes per word → up to 65536 → mod 2048
             getCryptoApi().getRandomValues(randomBytes);
             const words = Array.from({ length: 12 }, (_, i) => {
-                const idx = ((randomBytes[i * 2] << 8) | randomBytes[i * 2 + 1]) % WORD_LIST.length;
-                return WORD_LIST[idx];
+                const idx = ((randomBytes[i * 2] << 8) | randomBytes[i * 2 + 1]) % BIP39_WORD_COUNT;
+                return BIP39_WORDLIST[idx];
             });
             const { users, index } = this._findUser(session.username);
             users[index].seedPhrase = words.join(' ');
