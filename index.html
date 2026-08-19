@@ -1542,13 +1542,47 @@
             const modal = document.getElementById('hashDetailModal');
             const content = document.getElementById('hashDetailContent');
             if (!modal || !content) { return; }
-            content.innerHTML = `
-                <p><strong>Hash:</strong> <span style="font-family:monospace;word-break:break-all">${item.hash}</span>
-                    <button type="button" class="secondary" style="padding:3px 8px;font-size:0.78rem;" onclick="navigator.clipboard?.writeText('${item.hash}')">Kopieren</button></p>
-                <p><strong>Aktion:</strong> ${item.action}</p>
-                <p><strong>User:</strong> ${item.user}</p>
-                <p><strong>Timestamp:</strong> ${item.ts}</p>
-                <p><strong>Status:</strong> <span style="color:var(--success)">${item.status}</span></p>`;
+            // Build detail content using DOM API to avoid XSS from user-supplied data.
+            content.replaceChildren();
+            function addRow(label, value, mono) {
+                const p = document.createElement('p');
+                const strong = document.createElement('strong');
+                strong.textContent = label + ': ';
+                p.appendChild(strong);
+                const span = document.createElement('span');
+                if (mono) { span.style.fontFamily = 'monospace'; span.style.wordBreak = 'break-all'; }
+                span.textContent = value;
+                p.appendChild(span);
+                content.appendChild(p);
+            }
+            const hashP = document.createElement('p');
+            const hashStrong = document.createElement('strong');
+            hashStrong.textContent = 'Hash: ';
+            hashP.appendChild(hashStrong);
+            const hashSpan = document.createElement('span');
+            hashSpan.style.cssText = 'font-family:monospace;word-break:break-all';
+            hashSpan.textContent = item.hash;
+            hashP.appendChild(hashSpan);
+            const copyBtn = document.createElement('button');
+            copyBtn.type = 'button';
+            copyBtn.className = 'secondary';
+            copyBtn.style.cssText = 'padding:3px 8px;font-size:0.78rem;margin-left:8px;';
+            copyBtn.textContent = 'Kopieren';
+            copyBtn.addEventListener('click', () => navigator.clipboard?.writeText(item.hash));
+            hashP.appendChild(copyBtn);
+            content.appendChild(hashP);
+            addRow('Aktion', item.action);
+            addRow('User', item.user);
+            addRow('Timestamp', item.ts);
+            const statusP = document.createElement('p');
+            const statusStrong = document.createElement('strong');
+            statusStrong.textContent = 'Status: ';
+            statusP.appendChild(statusStrong);
+            const statusSpan = document.createElement('span');
+            statusSpan.style.color = 'var(--success)';
+            statusSpan.textContent = item.status;
+            statusP.appendChild(statusSpan);
+            content.appendChild(statusP);
             modal.classList.add('open');
         }
 
