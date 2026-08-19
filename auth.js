@@ -5,10 +5,17 @@ const USERS_KEY = 'rfof_auth_users_v1';
 const SESSION_KEY = 'rfof_auth_session_v1';
 const LOGS_KEY = 'rfof_auth_logs_v1';
 const OAUTH_STATE_KEY = 'rfof_auth_oauth_state_v1';
+const CHAT_KEY = 'rfof_auth_chat_v1';
+const CHAT_USAGE_KEY = 'rfof_auth_chat_usage_v1';
+const CHAT_AUTONOMY_KEY = 'rfof_auth_chat_autonomy_v1';
 const SESSION_TIMEOUT_MS = 15 * 60 * 1000;
 const LOCKOUT_MS = 15 * 60 * 1000;
 const MAX_FAILED_ATTEMPTS = 5;
 const LOG_LIMIT = 200;
+const CHAT_HISTORY_LIMIT = 120;
+const USER_CHAT_DAILY_MESSAGE_LIMIT = 40;
+const USER_CHAT_DAILY_TOKEN_LIMIT = 12_000;
+const USER_CHAT_INPUT_CHAR_LIMIT = 1_200;
 const OAUTH_PROVIDERS = Object.freeze(['github', 'google', 'microsoft']);
 
 function getCryptoApi() {
@@ -65,6 +72,18 @@ function fromBase64Url(value) {
 
 function isoNow(nowProvider = () => Date.now()) {
     return new Date(nowProvider()).toISOString();
+}
+
+function dayStamp(nowProvider = () => Date.now()) {
+    return new Date(nowProvider()).toISOString().slice(0, 10);
+}
+
+function estimateTokenCount(text) {
+    const value = String(text ?? '').trim();
+    if (!value) {
+        return 0;
+    }
+    return Math.max(1, Math.ceil(value.length / 4));
 }
 
 function safeJsonParse(value, fallback) {
@@ -268,7 +287,10 @@ export class AuthManager {
         now = () => Date.now(),
         sessionTimeoutMs = SESSION_TIMEOUT_MS,
         lockoutMs = LOCKOUT_MS,
-        maxFailedAttempts = MAX_FAILED_ATTEMPTS
+        maxFailedAttempts = MAX_FAILED_ATTEMPTS,
+        chatUserDailyMessageLimit = USER_CHAT_DAILY_MESSAGE_LIMIT,
+        chatUserDailyTokenLimit = USER_CHAT_DAILY_TOKEN_LIMIT,
+        chatUserInputCharLimit = USER_CHAT_INPUT_CHAR_LIMIT
     } = {}) {
         if (!storage) {
             throw new Error('localStorage ist nicht verfügbar.');
@@ -278,6 +300,9 @@ export class AuthManager {
         this.sessionTimeoutMs = sessionTimeoutMs;
         this.lockoutMs = lockoutMs;
         this.maxFailedAttempts = maxFailedAttempts;
+        this.chatUserDailyMessageLimit = chatUserDailyMessageLimit;
+        this.chatUserDailyTokenLimit = chatUserDailyTokenLimit;
+        this.chatUserInputCharLimit = chatUserInputCharLimit;
     }
 
     getUsers() {
@@ -302,6 +327,30 @@ export class AuthManager {
 
     saveOauthState(value) {
         this.storage.setItem(OAUTH_STATE_KEY, JSON.stringify(normalizeOauthStateStore(value)));
+    }
+
+    getChatStore() {
+        return safeJsonParse(this.storage.getItem(CHAT_KEY), {});
+    }
+
+    saveChatStore(value) {
+        this.storage.setItem(CHAT_KEY, JSON.stringify(value || {}));
+    }
+
+    getChatUsageStore() {
+        return safeJsonParse(this.storage.getItem(CHAT_USAGE_KEY), {});
+    }
+
+    saveChatUsageStore(value) {
+        this.storage.setItem(CHAT_USAGE_KEY, JSON.stringify(value || {}));
+    }
+
+    getChatAutonomyStore() {
+        return safeJsonParse(this.storage.getItem(CHAT_AUTONOMY_KEY), {});
+    }
+
+    saveChatAutonomyStore(value) {
+        this.storage.setItem(CHAT_AUTONOMY_KEY, JSON.stringify(value || {}));
     }
 
     getSession() {
@@ -365,8 +414,183 @@ export class AuthManager {
         };
     }
 
+    _getChatQuota(role) {
+        if (role === 'admin') {
+            return {
+                unlimited: true,
+                dailyMessageLimit: null,
+                dailyTokenLimit: null,
+                inputCharLimit: 8_000
+            };
+        }
+        return {
+            unlimited: false,
+            dailyMessageLimit: this.chatUserDailyMessageLimit,
+            dailyTokenLimit: this.chatUserDailyTokenLimit,
+            inputCharLimit: this.chatUserInputCharLimit
+        };
+    }
+
+    _getOrCreateUsageRecord(username, role) {
+        const usageStore = this.getChatUsageStore();
+        const today = dayStamp(this.now);
+        const current = usageStore[username];
+        if (!current || current.day !== today) {
+            usageStore[username] = {
+                day: today,
+                messageCount: 0,
+                tokenCount: 0
+            };
+            this.saveChatUsageStore(usageStore);
+            return usageStore[username];
+        }
+        return current;
+    }
+
+    _saveUsageRecord(username, record) {
+        const usageStore = this.getChatUsageStore();
+        usageStore[username] = record;
+        this.saveChatUsageStore(usageStore);
+    }
+
+    _generatePraiaiResponse(message, session) {
+        const text = String(message ?? '').trim();
+        const lower = text.toLowerCase();
+        const base = `PRAIAI (${session.role}) verarbeitet deine Nachricht lokal im Demo-Modus.`;
+        if (lower.includes('token') || lower.includes('tokenizer')) {
+            return `${base} Tokenizer-Check aktiv: ca. ${estimateTokenCount(text)} Input-Tokens erkannt; bei Bedarf kann ich die Eingabe weiter strukturieren.`;
+        }
+        if (lower.includes('admin')) {
+            return `${base} Admin-Flow erkannt: Audit-Logs, Export und Rollenprüfung sind bereit; Quota bleibt für Admin unbegrenzt.`;
+        }
+        if (lower.includes('help') || lower.includes('hilfe')) {
+            return `${base} Ich kann dir bei Wallet, Explorer, Security-Flow, OAuth2 und Settings direkt im Frontend helfen.`;
+        }
+        return `${base} Antwort generiert: "${text.slice(0, 180)}"${text.length > 180 ? '…' : ''}`;
+    }
+
+    _runSilentAutonomy(session, userMessage, assistantMessage) {
+        const text = `${String(userMessage ?? '')} ${String(assistantMessage ?? '')}`.toLowerCase();
+        let topic = '';
+        if (text.includes('wallet') || text.includes('send') || text.includes('swap')) {
+            topic = 'wallet';
+        } else if (text.includes('admin') || text.includes('audit') || text.includes('role')) {
+            topic = 'admin';
+        } else if (text.includes('security') || text.includes('passwort') || text.includes('2fa')) {
+            topic = 'security';
+        } else if (text.includes('tokenizer') || text.includes('token')) {
+            topic = 'tokenizer';
+        }
+        if (!topic) {
+            return;
+        }
+        const autonomyStore = this.getChatAutonomyStore();
+        const current = Array.isArray(autonomyStore[session.username]) ? autonomyStore[session.username] : [];
+        current.unshift({
+            topic,
+            createdAt: isoNow(this.now),
+            summary: `Silent-Autonomy erkannte Fokus: ${topic}`
+        });
+        autonomyStore[session.username] = current.slice(0, 20);
+        this.saveChatAutonomyStore(autonomyStore);
+        this._appendLog('PRAIAI_AUTONOMY', 'info', session.username, `Thema: ${topic}`);
+    }
+
     getOAuthProviders() {
         return [...OAUTH_PROVIDERS];
+    }
+
+    getChatUsage(csrfToken) {
+        const session = this._validateStateToken(csrfToken);
+        const quota = this._getChatQuota(session.role);
+        const usage = this._getOrCreateUsageRecord(session.username, session.role);
+        return {
+            day: usage.day,
+            role: session.role,
+            unlimited: quota.unlimited,
+            usedMessages: usage.messageCount,
+            usedTokens: usage.tokenCount,
+            remainingMessages: quota.unlimited ? null : Math.max(0, quota.dailyMessageLimit - usage.messageCount),
+            remainingTokens: quota.unlimited ? null : Math.max(0, quota.dailyTokenLimit - usage.tokenCount),
+            inputCharLimit: quota.inputCharLimit
+        };
+    }
+
+    getChatMessages(csrfToken) {
+        const session = this._validateStateToken(csrfToken);
+        const chatStore = this.getChatStore();
+        const messages = Array.isArray(chatStore[session.username]) ? chatStore[session.username] : [];
+        return messages.map((entry) => ({ ...entry }));
+    }
+
+    sendChatMessage(messageInput, csrfToken) {
+        const session = this._validateStateToken(csrfToken);
+        const message = String(messageInput ?? '').trim();
+        const quota = this._getChatQuota(session.role);
+        if (!message) {
+            throw new Error('Nachricht darf nicht leer sein.');
+        }
+        if (message.length > quota.inputCharLimit) {
+            throw new Error(`Nachricht zu lang (max. ${quota.inputCharLimit} Zeichen).`);
+        }
+
+        const usage = this._getOrCreateUsageRecord(session.username, session.role);
+        if (!quota.unlimited && usage.messageCount >= quota.dailyMessageLimit) {
+            this._appendLog('PRAIAI_CHAT', 'denied', session.username, 'Tageslimit Nachrichten erreicht');
+            throw new Error('Tageslimit für Nachrichten erreicht.');
+        }
+
+        const inputTokens = estimateTokenCount(message);
+        if (!quota.unlimited && (usage.tokenCount + inputTokens) > quota.dailyTokenLimit) {
+            this._appendLog('PRAIAI_CHAT', 'denied', session.username, 'Token-Limit erreicht');
+            throw new Error('Tageslimit für Tokens erreicht.');
+        }
+
+        const assistantText = this._generatePraiaiResponse(message, session);
+        const outputTokens = estimateTokenCount(assistantText);
+        const chatStore = this.getChatStore();
+        const current = Array.isArray(chatStore[session.username]) ? chatStore[session.username] : [];
+        const nowIsoValue = isoNow(this.now);
+        current.push(
+            {
+                role: 'user',
+                content: message,
+                timestamp: nowIsoValue,
+                tokens: inputTokens
+            },
+            {
+                role: 'assistant',
+                content: assistantText,
+                timestamp: nowIsoValue,
+                tokens: outputTokens
+            }
+        );
+        chatStore[session.username] = current.slice(-CHAT_HISTORY_LIMIT);
+        this.saveChatStore(chatStore);
+
+        usage.messageCount += 1;
+        usage.tokenCount += (inputTokens + outputTokens);
+        this._saveUsageRecord(session.username, usage);
+        this._appendLog('PRAIAI_CHAT', 'success', session.username, `Nachricht verarbeitet (+${inputTokens + outputTokens} Tokens)`);
+        this._runSilentAutonomy(session, message, assistantText);
+
+        return {
+            assistantMessage: assistantText,
+            usage: this.getChatUsage(csrfToken)
+        };
+    }
+
+    getAutonomyEvents(csrfToken) {
+        const session = this._validateStateToken(csrfToken);
+        const autonomyStore = this.getChatAutonomyStore();
+        if (session.role === 'admin') {
+            return Object.entries(autonomyStore).flatMap(([username, events]) => (
+                Array.isArray(events)
+                    ? events.map((entry) => ({ username, ...entry }))
+                    : []
+            ));
+        }
+        return (Array.isArray(autonomyStore[session.username]) ? autonomyStore[session.username] : []).map((entry) => ({ ...entry }));
     }
 
     createOAuthState(providerInput) {
@@ -1090,5 +1314,9 @@ export const authConfig = {
     oauthProviders: OAUTH_PROVIDERS,
     sessionTimeoutMs: SESSION_TIMEOUT_MS,
     lockoutMs: LOCKOUT_MS,
-    maxFailedAttempts: MAX_FAILED_ATTEMPTS
+    maxFailedAttempts: MAX_FAILED_ATTEMPTS,
+    chatHistoryLimit: CHAT_HISTORY_LIMIT,
+    userChatDailyMessageLimit: USER_CHAT_DAILY_MESSAGE_LIMIT,
+    userChatDailyTokenLimit: USER_CHAT_DAILY_TOKEN_LIMIT,
+    userChatInputCharLimit: USER_CHAT_INPUT_CHAR_LIMIT
 };
