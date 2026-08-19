@@ -344,10 +344,115 @@
             .form-grid { grid-template-columns: 1fr; }
             .oauth-grid { grid-template-columns: 1fr; }
         }
+
+        /* ── Top Navigation ── */
+        .top-nav {
+            display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 14px; padding: 10px 18px; margin-bottom: 18px;
+            backdrop-filter: blur(12px);
+        }
+        .top-nav .nav-title { font-weight: 700; font-size: 1rem; margin-right: 8px; }
+        .top-nav button { padding: 6px 14px; font-size: 0.85rem; }
+        .top-nav .nav-info { font-size: 0.82rem; color: var(--muted); }
+        .nav-sep { flex: 1; }
+
+        /* ── Modal overlay ── */
+        .modal-backdrop {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.6); z-index: 100;
+            align-items: center; justify-content: center;
+        }
+        .modal-backdrop.open { display: flex; }
+        .modal-box {
+            background: var(--surface-strong); border: 1px solid var(--border);
+            border-radius: 18px; padding: 28px; width: min(480px, 94vw);
+            box-shadow: var(--shadow); position: relative;
+        }
+        .modal-box h3 { margin-bottom: 12px; }
+        .modal-close {
+            position: absolute; top: 14px; right: 14px;
+            background: none; border: none; font-size: 1.2rem;
+            cursor: pointer; color: var(--muted); padding: 4px 8px;
+        }
+
+        /* ── Settings tabs ── */
+        .tab-strip { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+        .tab-strip button { padding: 6px 14px; font-size: 0.85rem; }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+
+        /* ── Wallet ── */
+        .wallet-balance { font-size: 2rem; font-weight: 700; color: var(--accent); margin: 8px 0; }
+        .wallet-meta { font-size: 0.82rem; color: var(--muted); margin-bottom: 14px; }
+        .wallet-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+        .wallet-actions button { flex: 1 1 120px; }
+        .tx-list { list-style: none; padding: 0; display: grid; gap: 8px; max-height: 280px; overflow: auto; }
+        .tx-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; font-size: 0.85rem; }
+        .tx-hash { font-family: monospace; color: var(--accent); cursor: pointer; text-decoration: underline; }
+
+        /* ── Explorer ── */
+        .explorer-search { display: flex; gap: 8px; margin-bottom: 14px; }
+        .explorer-search input { flex: 1; }
+        .hash-list { list-style: none; padding: 0; display: grid; gap: 6px; max-height: 320px; overflow: auto; }
+        .hash-item { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .hash-item .hash-val { font-family: monospace; font-size: 0.82rem; color: var(--accent); cursor: pointer; text-decoration: underline; }
+        .hash-detail { font-size: 0.78rem; color: var(--muted); }
+        .explorer-toolbar { display: flex; gap: 8px; margin-top: 10px; }
+
+        /* ── rApp Store ── */
+        .rapp-store { overflow-x: auto; padding-bottom: 8px; }
+        .rapp-row { display: flex; gap: 14px; min-width: max-content; padding: 4px 2px; }
+        .rapp-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 14px; padding: 14px; width: 160px; cursor: pointer;
+            transition: transform .15s, box-shadow .15s; text-align: center;
+        }
+        .rapp-card:hover { transform: scale(1.04); box-shadow: var(--shadow); }
+        .rapp-icon { font-size: 2.2rem; margin-bottom: 8px; }
+        .rapp-name { font-weight: 700; font-size: 0.9rem; }
+        .rapp-desc { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+        .rapp-meta { font-size: 0.72rem; color: var(--muted); margin-top: 6px; }
+        .rapp-search { display: flex; gap: 8px; margin-bottom: 12px; }
+        .rapp-search input { flex: 1; }
+
+        /* ── 2FA ── */
+        .twofa-timer { font-weight: 700; color: var(--warning); }
+        .code-inputs { display: flex; gap: 6px; justify-content: center; margin: 14px 0; }
+        .code-inputs input {
+            width: 42px; height: 52px; text-align: center; font-size: 1.4rem;
+            font-weight: 700; border-radius: 8px; border: 1.5px solid var(--border);
+            background: var(--surface); color: var(--text);
+        }
+
+        /* ── Forgot-password steps ── */
+        .fp-step { display: none; }
+        .fp-step.active { display: block; }
+
+        /* ── Admin extras ── */
+        .dna-heatmap { display: grid; grid-template-columns: repeat(auto-fill, 24px); gap: 4px; margin-top: 10px; }
+        .dna-cell { width: 24px; height: 24px; border-radius: 4px; background: var(--accent); opacity: 0.25; }
+        .dna-cell.hot { opacity: 1; background: var(--danger); }
+        .dna-cell.warm { opacity: 0.65; background: var(--warning); }
     </style>
 </head>
 <body>
     <div class="shell">
+
+        <!-- ── Top Navigation ── -->
+        <nav class="top-nav" id="topNav">
+            <span class="nav-title">🔐 RFOF-NETWORK</span>
+            <button type="button" id="navHome" class="secondary" hidden>🏠 Home</button>
+            <button type="button" id="navWallet" class="secondary" hidden>💎 Wallet</button>
+            <button type="button" id="navExplorer" class="secondary" hidden>🔍 Explorer</button>
+            <button type="button" id="navRapp" class="secondary" hidden>🛒 rApp Store</button>
+            <button type="button" id="navMtkNec" class="secondary" hidden>💱 MTK/NEC</button>
+            <button type="button" id="navSettings" class="secondary" hidden>⚙️ Settings</button>
+            <button type="button" id="navAdmin" class="secondary" hidden>🛡️ Admin</button>
+            <span class="nav-sep"></span>
+            <span class="nav-info" id="navUserInfo"></span>
+            <button type="button" id="navLogin">Login / Register</button>
+        </nav>
         <section class="hero">
             <div class="hero-top">
                 <div>
@@ -412,6 +517,9 @@
                         <input id="loginPassword" name="password" type="password" autocomplete="current-password" required>
                     </div>
                     <button id="loginButton" type="submit">Einloggen</button>
+                    <p style="text-align:center;margin-top:8px;font-size:0.85rem;">
+                        <a href="#" id="forgotPasswordLink" style="color:var(--accent);">Passwort vergessen?</a>
+                    </p>
                 </form>
 
                 <form id="registerForm" class="form-grid stack" hidden novalidate>
@@ -585,8 +693,404 @@
         </div>
     </div>
 
+    <!-- ── 2FA Verification Modal ── -->
+    <div class="modal-backdrop" id="twoFAModal" role="dialog" aria-modal="true" aria-label="Zwei-Faktor-Authentifizierung">
+        <div class="modal-box">
+            <button class="modal-close" id="twoFAClose" type="button" aria-label="Schließen">✕</button>
+            <h3>🔒 Zwei-Faktor-Authentifizierung</h3>
+            <p id="twoFADesc">Ein 6-stelliger Code wurde an deine E-Mail / Telefonnummer gesendet.</p>
+            <p>Verbleibende Zeit: <span class="twofa-timer" id="twoFATimer">5:00</span></p>
+            <div class="code-inputs" id="codeInputs">
+                <input type="text" inputmode="numeric" maxlength="1" aria-label="Stelle 1">
+                <input type="text" inputmode="numeric" maxlength="1" aria-label="Stelle 2">
+                <input type="text" inputmode="numeric" maxlength="1" aria-label="Stelle 3">
+                <input type="text" inputmode="numeric" maxlength="1" aria-label="Stelle 4">
+                <input type="text" inputmode="numeric" maxlength="1" aria-label="Stelle 5">
+                <input type="text" inputmode="numeric" maxlength="1" aria-label="Stelle 6">
+            </div>
+            <div class="button-row">
+                <button type="button" id="twoFAVerify">Code bestätigen</button>
+                <button type="button" id="twoFAResend" class="secondary">Code erneut senden</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Forgot-Password Modal ── -->
+    <div class="modal-backdrop" id="forgotModal" role="dialog" aria-modal="true" aria-label="Passwort vergessen">
+        <div class="modal-box">
+            <button class="modal-close" id="forgotClose" type="button" aria-label="Schließen">✕</button>
+            <h3>🔑 Passwort vergessen</h3>
+
+            <div class="fp-step active" id="fpStep1">
+                <p>Gib deine E-Mail-Adresse oder Telefonnummer ein, um einen Recovery-Code zu erhalten.</p>
+                <div class="form-grid stack">
+                    <div>
+                        <label for="fpContact">E-Mail oder Telefon</label>
+                        <input id="fpContact" type="text" autocomplete="email" placeholder="user@example.com oder +49…">
+                    </div>
+                    <button type="button" id="fpSendCode">Recovery-Code senden</button>
+                </div>
+            </div>
+
+            <div class="fp-step" id="fpStep2">
+                <p>Gib den 6-stelligen Code ein, der an dich gesendet wurde.</p>
+                <div class="code-inputs" id="fpCodeInputs">
+                    <input type="text" inputmode="numeric" maxlength="1" aria-label="Stelle 1">
+                    <input type="text" inputmode="numeric" maxlength="1" aria-label="Stelle 2">
+                    <input type="text" inputmode="numeric" maxlength="1" aria-label="Stelle 3">
+                    <input type="text" inputmode="numeric" maxlength="1" aria-label="Stelle 4">
+                    <input type="text" inputmode="numeric" maxlength="1" aria-label="Stelle 5">
+                    <input type="text" inputmode="numeric" maxlength="1" aria-label="Stelle 6">
+                </div>
+                <button type="button" id="fpVerifyCode">Code bestätigen</button>
+            </div>
+
+            <div class="fp-step" id="fpStep3">
+                <p>Lege jetzt ein neues Passwort fest.</p>
+                <div class="form-grid stack">
+                    <div>
+                        <label for="fpNewPw">Neues Passwort</label>
+                        <input id="fpNewPw" type="password" autocomplete="new-password">
+                    </div>
+                    <div>
+                        <label for="fpNewPwConfirm">Passwort bestätigen</label>
+                        <input id="fpNewPwConfirm" type="password" autocomplete="new-password">
+                    </div>
+                    <button type="button" id="fpResetPw">Passwort zurücksetzen</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Hash Detail Modal ── -->
+    <div class="modal-backdrop" id="hashDetailModal" role="dialog" aria-modal="true" aria-label="Hash Details">
+        <div class="modal-box">
+            <button class="modal-close" id="hashDetailClose" type="button" aria-label="Schließen">✕</button>
+            <h3>🔍 Hash-Details</h3>
+            <div id="hashDetailContent"></div>
+        </div>
+    </div>
+
+    <!-- ── Wallet Action Modal ── -->
+    <div class="modal-backdrop" id="walletActionModal" role="dialog" aria-modal="true" aria-label="Wallet Aktion">
+        <div class="modal-box">
+            <button class="modal-close" id="walletActionClose" type="button" aria-label="Schließen">✕</button>
+            <h3 id="walletActionTitle">Wallet Aktion</h3>
+            <div id="walletActionContent"></div>
+        </div>
+    </div>
+
+    <!-- ──────────────────────────────────────────────────────────────────── -->
+    <!-- ── Wallet Section ────────────────────────────────────────────────── -->
+    <section id="walletSection" class="panel" style="display:none;margin-top:24px;">
+        <div class="split" style="justify-content:space-between;align-items:center;">
+            <div>
+                <h2>💎 Electrotronix Wallet</h2>
+                <p>Dein RFOF-NETWORK Wallet mit vollständiger Multi-Währungs-Ansicht.</p>
+            </div>
+        </div>
+        <div class="wallet-balance" id="walletBalance">0.00 RFOF</div>
+        <div class="wallet-meta" id="walletMeta">
+            ISO: RFOF &nbsp;|&nbsp; IBAN: RFOF0000000000000000 &nbsp;|&nbsp; BIC: RFOFNETXXX<br>
+            Wallet-Adresse: <span id="walletAddress" style="font-family:monospace;color:var(--accent);">-</span>
+        </div>
+        <div class="wallet-actions" id="walletActions">
+            <button type="button" class="wallet-btn" data-action="deposit">⬇️ Deposit</button>
+            <button type="button" class="wallet-btn" data-action="withdraw">⬆️ Withdraw</button>
+            <button type="button" class="wallet-btn secondary" data-action="send">📤 Send</button>
+            <button type="button" class="wallet-btn secondary" data-action="receive">📥 Receive</button>
+            <button type="button" class="wallet-btn secondary" data-action="swap">🔄 Swap</button>
+            <button type="button" class="wallet-btn secondary" data-action="stake">🔒 Stake</button>
+            <button type="button" class="wallet-btn secondary" data-action="unstake">🔓 Unstake</button>
+            <button type="button" class="wallet-btn secondary" data-action="mining_start">⛏️ Mining starten</button>
+            <button type="button" class="wallet-btn danger" data-action="mining_stop">⏹ Mining stoppen</button>
+        </div>
+        <h3 style="margin-top:18px;">Transaktions-History</h3>
+        <ul class="tx-list" id="txList"><li style="color:var(--muted);font-size:0.85rem;">Noch keine Transaktionen.</li></ul>
+
+        <!-- rApp Store mini (wallet context) -->
+        <h3 style="margin-top:22px;">rApp Store</h3>
+        <div class="rapp-search">
+            <input type="search" id="rappSearchWallet" placeholder="App suchen…">
+        </div>
+        <div class="rapp-store"><div class="rapp-row" id="rappRowWallet"></div></div>
+    </section>
+
+    <!-- ── Settings Section ── -->
+    <section id="settingsSection" class="panel" style="display:none;margin-top:24px;">
+        <h2>⚙️ Profil &amp; Einstellungen</h2>
+
+        <div class="tab-strip" id="settingsTabs">
+            <button type="button" class="settings-tab active" data-tab="settingsAccount">👤 Account</button>
+            <button type="button" class="settings-tab secondary" data-tab="settingsContact">📞 Kontakt</button>
+            <button type="button" class="settings-tab secondary" data-tab="settings2FA">🔒 2FA</button>
+            <button type="button" class="settings-tab secondary" data-tab="settingsSeed">🌱 Seed-Phrase</button>
+            <button type="button" class="settings-tab secondary" data-tab="settingsOauth">🔗 Verknüpfte Accounts</button>
+        </div>
+
+        <!-- Account Tab -->
+        <div class="tab-pane active" id="settingsAccount">
+            <div class="form-grid stack" style="max-width:420px;">
+                <div>
+                    <label for="settingsNewUsername">Neuer Benutzername</label>
+                    <input id="settingsNewUsername" type="text" maxlength="32" autocomplete="username">
+                </div>
+                <button type="button" id="settingsSaveUsername">Benutzername ändern</button>
+                <hr style="border-color:var(--border);margin:8px 0;">
+                <div>
+                    <label for="settingsCurrentPw">Aktuelles Passwort</label>
+                    <input id="settingsCurrentPw" type="password" autocomplete="current-password">
+                </div>
+                <div>
+                    <label for="settingsNewPw">Neues Passwort</label>
+                    <input id="settingsNewPw" type="password" autocomplete="new-password">
+                </div>
+                <div>
+                    <label for="settingsNewPwConfirm">Neues Passwort bestätigen</label>
+                    <input id="settingsNewPwConfirm" type="password" autocomplete="new-password">
+                </div>
+                <button type="button" id="settingsSavePw">Passwort ändern</button>
+            </div>
+        </div>
+
+        <!-- Contact Tab -->
+        <div class="tab-pane" id="settingsContact">
+            <div class="form-grid stack" style="max-width:420px;">
+                <div>
+                    <label for="settingsEmail">E-Mail-Adresse</label>
+                    <input id="settingsEmail" type="email" autocomplete="email" placeholder="user@example.com">
+                </div>
+                <div>
+                    <label for="settingsPhone">Telefonnummer</label>
+                    <input id="settingsPhone" type="tel" autocomplete="tel" placeholder="+49 123 456789">
+                </div>
+                <button type="button" id="settingsSaveContact">Kontaktdaten speichern</button>
+            </div>
+        </div>
+
+        <!-- 2FA Tab -->
+        <div class="tab-pane" id="settings2FA">
+            <div class="form-grid stack" style="max-width:420px;">
+                <p id="twoFAStatus">2FA: <strong>Deaktiviert</strong></p>
+                <div>
+                    <label for="twoFAMethod">2FA-Methode</label>
+                    <select id="twoFAMethod" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);">
+                        <option value="email">E-Mail</option>
+                        <option value="sms">SMS</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="twoFAContact">E-Mail oder Telefon für 2FA</label>
+                    <input id="twoFAContact" type="text" placeholder="user@example.com oder +49…">
+                </div>
+                <div class="button-row">
+                    <button type="button" id="settingsEnable2FA">2FA aktivieren</button>
+                    <button type="button" id="settingsDisable2FA" class="secondary">2FA deaktivieren</button>
+                    <button type="button" id="settingsSend2FATest" class="secondary">Test-Code senden</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seed Tab -->
+        <div class="tab-pane" id="settingsSeed">
+            <div class="form-grid stack" style="max-width:500px;">
+                <div class="notice" style="padding:12px 16px;border-radius:10px;">
+                    <strong>⚠️ Wichtig:</strong> Zeige deine Seed-Phrase niemals anderen Personen. Wer die Phrase kennt, hat vollen Zugriff auf deinen Wallet.
+                </div>
+                <button type="button" id="settingsRevealSeed">Seed-Phrase anzeigen</button>
+                <div id="seedPhraseDisplay" style="display:none;">
+                    <p id="seedPhraseText" style="font-family:monospace;background:var(--surface);padding:14px;border-radius:10px;word-break:break-all;"></p>
+                    <button type="button" id="seedCopy" class="secondary">Kopieren</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- OAuth Tab -->
+        <div class="tab-pane" id="settingsOauth">
+            <p>Verknüpfte OAuth2-Provider:</p>
+            <ul id="oauthProviderList" style="list-style:none;padding:0;display:grid;gap:8px;"></ul>
+        </div>
+    </section>
+
+    <!-- ── Explorer Section ── -->
+    <section id="explorerSection" class="panel" style="display:none;margin-top:24px;">
+        <div class="split" style="justify-content:space-between;align-items:center;">
+            <div>
+                <h2>🔍 X-Hub — Blockchain Explorer</h2>
+                <p>Alle Transaktions-, Block- und Interaktions-Hashes. Klicke auf einen Hash für Details.</p>
+            </div>
+            <div class="explorer-toolbar">
+                <button type="button" id="explorerInfoBtn" class="secondary">ℹ️ Info</button>
+                <button type="button" id="explorerConsoleBtn" class="secondary">🖥️ Konsole</button>
+            </div>
+        </div>
+        <div class="explorer-search">
+            <input id="explorerSearch" type="search" placeholder="Suche nach Hash, Adresse, Block, Timestamp…">
+            <button type="button" id="explorerSearchBtn">Suchen</button>
+        </div>
+        <ul class="hash-list" id="hashList"></ul>
+        <div id="explorerConsoleBox" style="display:none;margin-top:14px;">
+            <pre id="explorerConsoleText" style="background:var(--surface);border-radius:10px;padding:14px;overflow:auto;max-height:220px;font-size:0.8rem;"></pre>
+        </div>
+
+        <!-- rApp Store mini (explorer context) -->
+        <h3 style="margin-top:22px;">rApp Store</h3>
+        <div class="rapp-store"><div class="rapp-row" id="rappRowExplorer"></div></div>
+    </section>
+
+    <!-- ── rApp Store Section ── -->
+    <section id="rappSection" class="panel" style="display:none;margin-top:24px;">
+        <h2>🛒 rApp Store</h2>
+        <p>Entdecke und nutze Apps im RFOF-NETWORK Ökosystem.</p>
+        <div class="rapp-search">
+            <input type="search" id="rappSearchMain" placeholder="App suchen…">
+        </div>
+        <div class="rapp-store" style="margin-top:6px;">
+            <div class="rapp-row" id="rappRowMain"></div>
+        </div>
+    </section>
+
+    <!-- ── MTK/NEC Economy Section ── -->
+    <section id="mtkNecSection" class="panel" style="display:none;margin-top:24px;">
+        <h2>💱 MTK-NEC Layer-7 Wirtschaft</h2>
+        <p style="margin-bottom:16px;">Perpetual Escrow · 6 Layer · 4 Richtungen · NEC-Rabatt · 5 Blätter</p>
+
+        <!-- Layer calculator -->
+        <div class="split" style="gap:18px;flex-wrap:wrap;">
+            <div class="panel" style="flex:1;min-width:260px;padding:16px;">
+                <h3 style="margin-bottom:12px;">⚙️ Layer-Rechner</h3>
+                <label for="mtkBaseAmount">Basis-MTK Betrag</label>
+                <input id="mtkBaseAmount" type="number" value="100" min="0" step="0.01" style="width:100%;margin-top:4px;background:var(--surface-strong);border:1px solid var(--border);border-radius:10px;padding:8px 10px;color:var(--text);">
+                <label for="mtkSteps" style="margin-top:10px;display:block;">Schritte (×2 pro Schritt)</label>
+                <input id="mtkSteps" type="number" value="1" min="0" max="30" style="width:100%;margin-top:4px;background:var(--surface-strong);border:1px solid var(--border);border-radius:10px;padding:8px 10px;color:var(--text);">
+                <label for="mtkDiscount" style="margin-top:10px;display:block;">NEC Rabatt %</label>
+                <input id="mtkDiscount" type="number" value="25" min="0" max="70" style="width:100%;margin-top:4px;background:var(--surface-strong);border:1px solid var(--border);border-radius:10px;padding:8px 10px;color:var(--text);">
+                <button id="mtkCalcBtn" style="margin-top:14px;width:100%;">Berechnen</button>
+            </div>
+            <div class="panel" style="flex:2;min-width:280px;padding:16px;">
+                <h3 style="margin-bottom:10px;">📊 Werte-Logik (Sheet 3)</h3>
+                <pre id="mtkLayerResult" style="background:var(--surface);border-radius:10px;padding:12px;font-size:0.82rem;overflow:auto;min-height:160px;white-space:pre-wrap;"></pre>
+            </div>
+        </div>
+
+        <!-- NEC Discount: Dice + RPS -->
+        <div class="split" style="gap:18px;flex-wrap:wrap;margin-top:18px;">
+            <div class="panel" style="flex:1;min-width:220px;padding:16px;">
+                <h3 style="margin-bottom:10px;">🎲 Würfel-Rabatt</h3>
+                <p style="font-size:0.88rem;">Würfle automatisch (1–6) → 50 % ± (Augenzahl × 5 %)</p>
+                <button id="necDiceBtn" style="margin-top:10px;width:100%;">Würfeln</button>
+                <pre id="necDiceResult" style="background:var(--surface);border-radius:10px;padding:10px;margin-top:10px;font-size:0.82rem;"></pre>
+            </div>
+            <div class="panel" style="flex:1;min-width:220px;padding:16px;">
+                <h3 style="margin-bottom:10px;">✂️ Schnick-Schnack-Schnuck</h3>
+                <p style="font-size:0.88rem;">Wähle 3 Runden (Sieg/Unentschieden/Niederlage)</p>
+                <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+                    <select id="rps0" style="flex:1;background:var(--surface-strong);border:1px solid var(--border);border-radius:8px;padding:6px;color:var(--text);">
+                        <option value="win">Sieg</option><option value="draw">Unentschieden</option><option value="loss">Niederlage</option>
+                    </select>
+                    <select id="rps1" style="flex:1;background:var(--surface-strong);border:1px solid var(--border);border-radius:8px;padding:6px;color:var(--text);">
+                        <option value="win">Sieg</option><option value="draw">Unentschieden</option><option value="loss">Niederlage</option>
+                    </select>
+                    <select id="rps2" style="flex:1;background:var(--surface-strong);border:1px solid var(--border);border-radius:8px;padding:6px;color:var(--text);">
+                        <option value="win">Sieg</option><option value="draw">Unentschieden</option><option value="loss">Niederlage</option>
+                    </select>
+                </div>
+                <button id="necRpsBtn" style="margin-top:10px;width:100%;">Auswerten</button>
+                <pre id="necRpsResult" style="background:var(--surface);border-radius:10px;padding:10px;margin-top:10px;font-size:0.82rem;"></pre>
+            </div>
+        </div>
+
+        <!-- Perpetual Escrow / Direction calculator -->
+        <div class="panel" style="padding:16px;margin-top:18px;">
+            <h3 style="margin-bottom:12px;">🔒 Perpetual Escrow / 4 Richtungen</h3>
+            <div class="split" style="gap:12px;flex-wrap:wrap;">
+                <div style="flex:1;min-width:180px;">
+                    <label for="escrowAmount">Betrag (MTK)</label>
+                    <input id="escrowAmount" type="number" value="1000" min="0" style="width:100%;margin-top:4px;background:var(--surface-strong);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);">
+                </div>
+                <div style="flex:1;min-width:140px;">
+                    <label for="escrowDirection">Richtung</label>
+                    <select id="escrowDirection" style="width:100%;margin-top:4px;background:var(--surface-strong);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);">
+                        <option value="A→C">A→C (MTK→NEC, 3D→2D)</option>
+                        <option value="C→A">C→A (NEC→MTK, 2D→3D)</option>
+                        <option value="B→D">B→D (Spiegel→NEC, 1D→2D)</option>
+                        <option value="D→B">D→B (NEC→Spiegel, 2D→1D)</option>
+                    </select>
+                </div>
+                <div style="flex:1;min-width:120px;">
+                    <label for="escrowDiscount">Rabatt %</label>
+                    <input id="escrowDiscount" type="number" value="20" min="0" max="50" style="width:100%;margin-top:4px;background:var(--surface-strong);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);">
+                </div>
+                <div style="flex:1;min-width:120px;">
+                    <label for="escrowTimeline">Zeitlinie</label>
+                    <select id="escrowTimeline" style="width:100%;margin-top:4px;background:var(--surface-strong);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);">
+                        <option value="1D">1D (Familie, ×0.5)</option>
+                        <option value="2D">2D (System, ×1.0)</option>
+                        <option value="3D" selected>3D (Nutzer, ×2.0)</option>
+                    </select>
+                </div>
+            </div>
+            <button id="escrowCalcBtn" style="margin-top:14px;">Escrow berechnen</button>
+            <pre id="escrowResult" style="background:var(--surface);border-radius:10px;padding:12px;margin-top:12px;font-size:0.82rem;white-space:pre-wrap;"></pre>
+        </div>
+
+        <!-- Sheet 4: Vertrag generator -->
+        <div class="panel" style="padding:16px;margin-top:18px;">
+            <h3 style="margin-bottom:12px;">📄 Sheet 4 — Universalvertrag</h3>
+            <div class="split" style="gap:12px;flex-wrap:wrap;">
+                <div style="flex:1;min-width:140px;">
+                    <label for="contractSeller">Verkäufer</label>
+                    <input id="contractSeller" value="Person1" style="width:100%;margin-top:4px;background:var(--surface-strong);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);">
+                </div>
+                <div style="flex:1;min-width:140px;">
+                    <label for="contractBuyer">Käufer</label>
+                    <input id="contractBuyer" value="Person2" style="width:100%;margin-top:4px;background:var(--surface-strong);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);">
+                </div>
+                <div style="flex:1;min-width:160px;">
+                    <label for="contractItem">Artikel</label>
+                    <input id="contractItem" value="Flohmarkt-Artikel" style="width:100%;margin-top:4px;background:var(--surface-strong);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);">
+                </div>
+                <div style="flex:1;min-width:120px;">
+                    <label for="contractMTK">MTK Betrag</label>
+                    <input id="contractMTK" type="number" value="500" style="width:100%;margin-top:4px;background:var(--surface-strong);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);">
+                </div>
+            </div>
+            <button id="contractGenBtn" style="margin-top:14px;">Vertrag generieren</button>
+            <pre id="contractResult" style="background:var(--surface);border-radius:10px;padding:12px;margin-top:12px;font-size:0.82rem;white-space:pre-wrap;overflow:auto;max-height:300px;"></pre>
+        </div>
+
+        <!-- SI Prefix / 30K Axiom quick-reference -->
+        <div class="split" style="gap:18px;flex-wrap:wrap;margin-top:18px;">
+            <div class="panel" style="flex:1;min-width:240px;padding:16px;">
+                <h3 style="margin-bottom:8px;">📏 30K-Axiom</h3>
+                <label for="axiom30kInput">Betrag (beliebig)</label>
+                <input id="axiom30kInput" type="number" value="30000" style="width:100%;margin-top:4px;background:var(--surface-strong);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);">
+                <button id="axiom30kBtn" style="margin-top:10px;width:100%;">Berechnen</button>
+                <pre id="axiom30kResult" style="background:var(--surface);border-radius:10px;padding:10px;margin-top:10px;font-size:0.82rem;"></pre>
+            </div>
+            <div class="panel" style="flex:2;min-width:240px;padding:16px;overflow-x:auto;">
+                <h3 style="margin-bottom:8px;">🔬 SI-Präfixe (10⁻³⁰ … 10⁺³⁰)</h3>
+                <table id="siTable" style="width:100%;border-collapse:collapse;font-size:0.8rem;">
+                    <thead><tr style="color:var(--muted);">
+                        <th style="text-align:left;padding:4px 8px;">Potenz</th>
+                        <th style="padding:4px 8px;">Symbol</th>
+                        <th style="padding:4px 8px;">Name</th>
+                        <th style="text-align:right;padding:4px 8px;">Wert</th>
+                    </tr></thead>
+                    <tbody id="siTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <script type="module">
         import { AuthManager, authConfig, passwordStrength } from './auth.js';
+        import {
+            layerA_mtkGrowth, layerB_mirrorMTK, layerC_necDiscount,
+            layerF_normalosMTK, necDiscountDice, necDiscountRPS,
+            perpetualEscrow, sheet3WertLogik, sheet4Vertrag,
+            apply30KAxiom, SI_PREFIXES,
+        } from './mtk-nec-economy.js';
 
         const auth = new AuthManager();
         const state = {
@@ -791,6 +1295,7 @@
                 elements.userStats.textContent = '-';
                 elements.userList.replaceChildren();
                 renderLogs();
+                if (typeof updateNavBar === 'function') { updateNavBar(null); }
                 return;
             }
 
@@ -804,6 +1309,8 @@
             renderLogs();
             renderUserOverview();
             updateSessionCountdown();
+            // Update top navigation state
+            if (typeof updateNavBar === 'function') { updateNavBar(session); }
         }
 
         function updateSessionCountdown() {
@@ -968,6 +1475,668 @@
 
         switchTab('login');
         updatePasswordMeter();
+
+        // ─── Helper: show/hide main views ─────────────────────────────────
+
+        const VIEWS = ['loginArea', 'walletSection', 'settingsSection',
+                       'explorerSection', 'rappSection', 'mtkNecSection', 'dashboard', 'adminPanel'];
+
+        function showView(name) {
+            const loginArea = document.querySelector('.grid');  // login+notice grid
+            if (loginArea) loginArea.style.display = name === 'loginArea' ? '' : 'none';
+            ['walletSection','settingsSection','explorerSection','rappSection','mtkNecSection'].forEach((id) => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = id === name ? '' : 'none';
+            });
+            const session = auth.getSessionSummary();
+            const dash = document.getElementById('dashboard');
+            const admin = document.getElementById('adminPanel');
+            if (dash) dash.classList.toggle('show', Boolean(session) && name !== 'loginArea');
+            if (admin) admin.classList.toggle('show', Boolean(session) && session?.role === 'admin' && name === 'adminPanel');
+            updateNavBar(session);
+        }
+
+        function updateNavBar(session) {
+            const loggedIn = Boolean(session);
+            ['navHome','navWallet','navExplorer','navRapp','navMtkNec','navSettings','navAdmin'].forEach((id) => {
+                const btn = document.getElementById(id);
+                if (btn) btn.hidden = !loggedIn;
+            });
+            const navAdmin = document.getElementById('navAdmin');
+            if (navAdmin) navAdmin.hidden = !(session?.role === 'admin');
+            const navLogin = document.getElementById('navLogin');
+            if (navLogin) navLogin.hidden = loggedIn;
+            const navUserInfo = document.getElementById('navUserInfo');
+            if (navUserInfo) navUserInfo.textContent = session ? `${session.username} · ${session.role}` : '';
+        }
+
+        document.getElementById('navHome')?.addEventListener('click', () => showView('walletSection'));
+        document.getElementById('navWallet')?.addEventListener('click', () => { showView('walletSection'); renderWallet(); });
+        document.getElementById('navExplorer')?.addEventListener('click', () => { showView('explorerSection'); renderExplorer(); });
+        document.getElementById('navRapp')?.addEventListener('click', () => { showView('rappSection'); renderRappStore('rappRowMain', ''); });
+        document.getElementById('navMtkNec')?.addEventListener('click', () => { showView('mtkNecSection'); initMtkNecSection(); });
+        document.getElementById('navSettings')?.addEventListener('click', () => { showView('settingsSection'); renderSettingsState(); });
+        document.getElementById('navAdmin')?.addEventListener('click', () => { showView('adminPanel'); });
+        document.getElementById('navLogin')?.addEventListener('click', () => showView('loginArea'));
+
+        // ─── rApp Store ─────────────────────────────────────────────────────
+
+        const RAPPS = [
+            { id: 'xhub',        icon: '🔍', name: 'X-Hub',        desc: 'Blockchain Explorer',   rating: '4.9', dl: '12k', view: 'explorerSection' },
+            { id: 'electrotronix',icon:'💎', name: 'Electrotronix', desc: 'RFOF Wallet',            rating: '4.8', dl: '8k',  view: 'walletSection' },
+            { id: 'explorer',    icon: '🌐', name: 'Explorer',      desc: 'Netzwerk-Übersicht',    rating: '4.7', dl: '5k',  view: 'explorerSection' }
+        ];
+
+        function renderRappStore(rowId, filterVal) {
+            const row = document.getElementById(rowId);
+            if (!row) { return; }
+            const q = (filterVal || '').toLowerCase();
+            const filtered = q ? RAPPS.filter((a) => a.name.toLowerCase().includes(q) || a.desc.toLowerCase().includes(q)) : RAPPS;
+            row.replaceChildren();
+            filtered.forEach((app) => {
+                const card = document.createElement('div');
+                card.className = 'rapp-card';
+                card.setAttribute('tabindex', '0');
+                card.setAttribute('role', 'button');
+                card.setAttribute('aria-label', app.name);
+                card.innerHTML = `<div class="rapp-icon">${app.icon}</div><div class="rapp-name">${app.name}</div><div class="rapp-desc">${app.desc}</div><div class="rapp-meta">⭐ ${app.rating} · ${app.dl} Downloads</div>`;
+                card.addEventListener('click', () => {
+                    showView(app.view);
+                    if (app.view === 'explorerSection') { renderExplorer(); }
+                    if (app.view === 'walletSection') { renderWallet(); }
+                });
+                row.appendChild(card);
+            });
+        }
+
+        document.getElementById('rappSearchMain')?.addEventListener('input', (e) => renderRappStore('rappRowMain', e.target.value));
+        document.getElementById('rappSearchWallet')?.addEventListener('input', (e) => renderRappStore('rappRowWallet', e.target.value));
+
+        // ─── Wallet ──────────────────────────────────────────────────────────
+
+        function renderWallet() {
+            const session = auth.getSessionSummary();
+            if (!session) { return; }
+            const addrEl = document.getElementById('walletAddress');
+            if (addrEl) addrEl.textContent = 'rfof1' + session.username.replace(/\W/g, '') + '0000';
+            renderTxHistory();
+            renderRappStore('rappRowWallet', '');
+        }
+
+        function renderTxHistory() {
+            const txList = document.getElementById('txList');
+            if (!txList) { return; }
+            const logs = auth.getVisibleLogs ? auth.getVisibleLogs() : auth.getLogs();
+            const txLogs = logs.filter((l) => ['WALLET_DEPOSIT','WALLET_WITHDRAW','WALLET_SEND','WALLET_RECEIVE','MINING_START','MINING_STOP'].includes(l.action));
+            if (txLogs.length === 0) {
+                txList.innerHTML = '<li style="color:var(--muted);font-size:0.85rem;">Noch keine Transaktionen.</li>';
+                return;
+            }
+            txList.replaceChildren();
+            txLogs.slice(0, 10).forEach((tx) => {
+                const li = document.createElement('li');
+                li.className = 'tx-item';
+                const shortHash = tx.txHash || ('0x' + Math.random().toString(16).slice(2, 18));
+                li.innerHTML = `<span class="tx-hash">${shortHash}</span> &nbsp; ${tx.action} &nbsp; <span style="color:var(--muted)">${tx.timestamp}</span>`;
+                txList.appendChild(li);
+            });
+        }
+
+        const WALLET_ACTIONS = {
+            deposit:      { title: '⬇️ Deposit', fields: [{id:'waIBAN', label:'IBAN / Konto-Nr.'},{id:'waAmount', label:'Betrag (RFOF)', type:'number'}], log:'WALLET_DEPOSIT' },
+            withdraw:     { title: '⬆️ Withdraw', fields: [{id:'waAddress', label:'Ziel-Adresse'},{id:'waAmount', label:'Betrag (RFOF)', type:'number'}], log:'WALLET_WITHDRAW' },
+            send:         { title: '📤 Send', fields: [{id:'waRecipient', label:'Empfänger'},{id:'waAmount', label:'Betrag (RFOF)', type:'number'},{id:'waMsg', label:'Nachricht (optional)'}], log:'WALLET_SEND' },
+            receive:      { title: '📥 Receive', qr: true, log:'WALLET_RECEIVE' },
+            swap:         { title: '🔄 Swap', fields: [{id:'waFrom', label:'Von Währung'},{id:'waTo', label:'Zu Währung'},{id:'waAmount', label:'Betrag', type:'number'}], log:'WALLET_SWAP' },
+            stake:        { title: '🔒 Stake', fields: [{id:'waAmount', label:'Betrag (RFOF)', type:'number'},{id:'waLockup', label:'Lockup-Zeit (Tage)', type:'number'}], log:'WALLET_STAKE' },
+            unstake:      { title: '🔓 Unstake', fields: [{id:'waAmount', label:'Betrag (RFOF)', type:'number'}], log:'WALLET_UNSTAKE' },
+            mining_start: { title: '⛏️ Mining starten', mining: 'start', log:'MINING_START' },
+            mining_stop:  { title: '⏹ Mining stoppen', mining: 'stop', log:'MINING_STOP' }
+        };
+
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.wallet-btn');
+            if (!btn) { return; }
+            const action = btn.dataset.action;
+            const cfg = WALLET_ACTIONS[action];
+            if (!cfg) { return; }
+            openWalletAction(action, cfg);
+        });
+
+        function openWalletAction(action, cfg) {
+            const modal = document.getElementById('walletActionModal');
+            const title = document.getElementById('walletActionTitle');
+            const content = document.getElementById('walletActionContent');
+            if (!modal || !title || !content) { return; }
+            title.textContent = cfg.title;
+            if (cfg.qr) {
+                const session = auth.getSessionSummary();
+                const addr = 'rfof1' + (session?.username || '').replace(/\W/g, '') + '0000';
+                content.innerHTML = `<p>Deine Wallet-Adresse:</p><p style="font-family:monospace;background:var(--surface);padding:10px;border-radius:8px;">${addr}</p><button type="button" onclick="navigator.clipboard?.writeText('${addr}').then(() => showBanner('success','Adresse kopiert!'))">Kopieren</button>`;
+            } else if (cfg.mining) {
+                const isMining = cfg.mining === 'start';
+                content.innerHTML = `<p>${isMining ? '⛏️ Mining wird gestartet…' : '⏹ Mining wird gestoppt…'}</p><button type="button" id="walletActionConfirm">${isMining ? 'Starten' : 'Stoppen'}</button>`;
+                document.getElementById('walletActionConfirm')?.addEventListener('click', () => {
+                    const session = auth.getSessionSummary();
+                    if (session) {
+                        auth._appendLog(cfg.log, 'success', session.username, isMining ? 'Mining gestartet' : 'Mining gestoppt');
+                        showBanner('success', isMining ? '⛏️ Mining gestartet!' : '⏹ Mining gestoppt.');
+                    }
+                    modal.classList.remove('open');
+                    renderTxHistory();
+                });
+            } else {
+                const inputs = (cfg.fields || []).map((f) => `<div><label for="${f.id}">${f.label}</label><input id="${f.id}" type="${f.type || 'text'}"></div>`).join('');
+                content.innerHTML = `<div class="form-grid stack">${inputs}<button type="button" id="walletActionConfirm">Bestätigen</button></div>`;
+                document.getElementById('walletActionConfirm')?.addEventListener('click', () => {
+                    const session = auth.getSessionSummary();
+                    if (session) {
+                        const amount = document.getElementById('waAmount')?.value || '';
+                        auth._appendLog(cfg.log, 'success', session.username, `Betrag: ${amount}`);
+                        showBanner('success', `${cfg.title} ausgeführt.`);
+                    }
+                    modal.classList.remove('open');
+                    renderTxHistory();
+                });
+            }
+            modal.classList.add('open');
+        }
+
+        document.getElementById('walletActionClose')?.addEventListener('click', () => {
+            document.getElementById('walletActionModal')?.classList.remove('open');
+        });
+
+        // ─── Explorer ────────────────────────────────────────────────────────
+
+        function generateDemoHash() {
+            const arr = new Uint8Array(20);
+            crypto.getRandomValues(arr);
+            return '0x' + Array.from(arr).map((b) => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        function renderExplorer(filter) {
+            const hashList = document.getElementById('hashList');
+            if (!hashList) { return; }
+            const logs = auth.getLogs();
+            const items = logs.length > 0
+                ? logs.map((l) => ({ hash: generateDemoHash(), action: l.action, user: l.username, ts: l.timestamp, status: l.status }))
+                : Array.from({ length: 8 }, (_, i) => ({ hash: generateDemoHash(), action: 'DEMO_TX', user: 'demo', ts: new Date().toISOString(), status: 'confirmed' }));
+
+            const q = (filter || '').toLowerCase();
+            const filtered = q ? items.filter((i) => i.action.toLowerCase().includes(q) || i.hash.includes(q) || i.user.toLowerCase().includes(q)) : items;
+
+            hashList.replaceChildren();
+            filtered.forEach((item) => {
+                const li = document.createElement('li');
+                li.className = 'hash-item';
+                li.innerHTML = `<span class="hash-val">${item.hash.slice(0, 20)}…</span><span class="hash-detail">${item.action} · ${item.user}</span><span class="hash-detail">${item.status}</span>`;
+                li.querySelector('.hash-val').addEventListener('click', () => openHashDetail(item));
+                hashList.appendChild(li);
+            });
+
+            const consoleText = document.getElementById('explorerConsoleText');
+            if (consoleText) { consoleText.textContent = JSON.stringify(filtered.slice(0, 5), null, 2); }
+            renderRappStore('rappRowExplorer', '');
+        }
+
+        function openHashDetail(item) {
+            const modal = document.getElementById('hashDetailModal');
+            const content = document.getElementById('hashDetailContent');
+            if (!modal || !content) { return; }
+            // Build detail content using DOM API to avoid XSS from user-supplied data.
+            content.replaceChildren();
+            function addRow(label, value, mono) {
+                const p = document.createElement('p');
+                const strong = document.createElement('strong');
+                strong.textContent = label + ': ';
+                p.appendChild(strong);
+                const span = document.createElement('span');
+                if (mono) { span.style.fontFamily = 'monospace'; span.style.wordBreak = 'break-all'; }
+                span.textContent = value;
+                p.appendChild(span);
+                content.appendChild(p);
+            }
+            const hashP = document.createElement('p');
+            const hashStrong = document.createElement('strong');
+            hashStrong.textContent = 'Hash: ';
+            hashP.appendChild(hashStrong);
+            const hashSpan = document.createElement('span');
+            hashSpan.style.cssText = 'font-family:monospace;word-break:break-all';
+            hashSpan.textContent = item.hash;
+            hashP.appendChild(hashSpan);
+            const copyBtn = document.createElement('button');
+            copyBtn.type = 'button';
+            copyBtn.className = 'secondary';
+            copyBtn.style.cssText = 'padding:3px 8px;font-size:0.78rem;margin-left:8px;';
+            copyBtn.textContent = 'Kopieren';
+            copyBtn.addEventListener('click', () => navigator.clipboard?.writeText(item.hash));
+            hashP.appendChild(copyBtn);
+            content.appendChild(hashP);
+            addRow('Aktion', item.action);
+            addRow('User', item.user);
+            addRow('Timestamp', item.ts);
+            const statusP = document.createElement('p');
+            const statusStrong = document.createElement('strong');
+            statusStrong.textContent = 'Status: ';
+            statusP.appendChild(statusStrong);
+            const statusSpan = document.createElement('span');
+            statusSpan.style.color = 'var(--success)';
+            statusSpan.textContent = item.status;
+            statusP.appendChild(statusSpan);
+            content.appendChild(statusP);
+            modal.classList.add('open');
+        }
+
+        document.getElementById('explorerSearchBtn')?.addEventListener('click', () => {
+            renderExplorer(document.getElementById('explorerSearch')?.value);
+        });
+        document.getElementById('explorerSearch')?.addEventListener('input', (e) => renderExplorer(e.target.value));
+        document.getElementById('explorerInfoBtn')?.addEventListener('click', () => {
+            showBanner('info', 'X-Hub Explorer: Zeigt alle Blockchain-Hashes dieser Session. Klicke auf einen Hash für Details.');
+        });
+        document.getElementById('explorerConsoleBtn')?.addEventListener('click', () => {
+            const box = document.getElementById('explorerConsoleBox');
+            if (box) { box.style.display = box.style.display === 'none' ? '' : 'none'; }
+        });
+        document.getElementById('hashDetailClose')?.addEventListener('click', () => {
+            document.getElementById('hashDetailModal')?.classList.remove('open');
+        });
+
+        // ─── Settings ────────────────────────────────────────────────────────
+
+        document.querySelectorAll('.settings-tab').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.settings-tab').forEach((b) => b.classList.replace('active', 'secondary') || b.classList.add('secondary'));
+                btn.classList.remove('secondary');
+                btn.classList.add('active');
+                const tabId = btn.dataset.tab;
+                document.querySelectorAll('.tab-pane').forEach((p) => p.classList.remove('active'));
+                document.getElementById(tabId)?.classList.add('active');
+            });
+        });
+
+        function renderSettingsState() {
+            const session = auth.getSessionSummary();
+            if (!session) { return; }
+            try {
+                const cfg = auth.getTwoFASettings(session.csrfToken);
+                const el = document.getElementById('twoFAStatus');
+                if (el) { el.innerHTML = `2FA: <strong>${cfg.enabled ? `Aktiv (${cfg.method} → ${cfg.contact})` : 'Deaktiviert'}</strong>`; }
+                if (cfg.contact) {
+                    const contactInput = document.getElementById('twoFAContact');
+                    if (contactInput) { contactInput.value = cfg.contact; }
+                    if (cfg.method) {
+                        const methodSelect = document.getElementById('twoFAMethod');
+                        if (methodSelect) { methodSelect.value = cfg.method; }
+                    }
+                }
+            } catch (_) {}
+
+            try {
+                const providers = auth.getConnectedProviders(session.csrfToken);
+                const list = document.getElementById('oauthProviderList');
+                if (list) {
+                    list.replaceChildren();
+                    if (providers.length === 0) {
+                        list.innerHTML = '<li style="color:var(--muted)">Keine OAuth2-Provider verknüpft.</li>';
+                    } else {
+                        providers.forEach((p) => {
+                            const li = document.createElement('li');
+                            li.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 0;';
+                            li.innerHTML = `<span>${p}</span><button type="button" class="secondary unlink-btn" data-provider="${p}" style="padding:4px 10px;font-size:0.8rem;">Trennen</button>`;
+                            list.appendChild(li);
+                        });
+                    }
+                }
+            } catch (_) {}
+        }
+
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.unlink-btn');
+            if (!btn) { return; }
+            const provider = btn.dataset.provider;
+            const session = auth.getSessionSummary();
+            if (!session) { return; }
+            withLoading(btn, async () => {
+                auth.unlinkOAuth2Account(provider, session.csrfToken);
+                showBanner('success', `${provider} getrennt.`);
+                renderSettingsState();
+            });
+        });
+
+        document.getElementById('settingsSaveUsername')?.addEventListener('click', () => {
+            const btn = document.getElementById('settingsSaveUsername');
+            withLoading(btn, async () => {
+                const session = auth.getSessionSummary();
+                if (!session) { throw new Error('Nicht eingeloggt.'); }
+                const val = document.getElementById('settingsNewUsername')?.value || '';
+                auth.updateUsername(val, session.csrfToken);
+                showBanner('success', 'Benutzername geändert!');
+                renderSession();
+            });
+        });
+
+        document.getElementById('settingsSavePw')?.addEventListener('click', () => {
+            const btn = document.getElementById('settingsSavePw');
+            withLoading(btn, async () => {
+                const session = auth.getSessionSummary();
+                if (!session) { throw new Error('Nicht eingeloggt.'); }
+                const cur = document.getElementById('settingsCurrentPw')?.value || '';
+                const nw = document.getElementById('settingsNewPw')?.value || '';
+                const cf = document.getElementById('settingsNewPwConfirm')?.value || '';
+                const result = await auth.changePassword(cur, nw, cf, session.csrfToken);
+                showBanner('success', 'Passwort erfolgreich geändert!');
+                ['settingsCurrentPw','settingsNewPw','settingsNewPwConfirm'].forEach((id) => {
+                    const el = document.getElementById(id);
+                    if (el) { el.value = ''; }
+                });
+            });
+        });
+
+        document.getElementById('settingsSaveContact')?.addEventListener('click', () => {
+            const btn = document.getElementById('settingsSaveContact');
+            withLoading(btn, async () => {
+                const session = auth.getSessionSummary();
+                if (!session) { throw new Error('Nicht eingeloggt.'); }
+                const email = document.getElementById('settingsEmail')?.value;
+                const phone = document.getElementById('settingsPhone')?.value;
+                auth.updateContactInfo(email, phone, session.csrfToken);
+                showBanner('success', 'Kontaktdaten gespeichert!');
+                renderSettingsState();
+            });
+        });
+
+        document.getElementById('settingsEnable2FA')?.addEventListener('click', () => {
+            const btn = document.getElementById('settingsEnable2FA');
+            withLoading(btn, async () => {
+                const session = auth.getSessionSummary();
+                if (!session) { throw new Error('Nicht eingeloggt.'); }
+                const method = document.getElementById('twoFAMethod')?.value || 'email';
+                const contact = document.getElementById('twoFAContact')?.value || '';
+                auth.setupTwoFA(method, contact, session.csrfToken);
+                showBanner('success', `2FA aktiviert (${method} → ${contact}).`);
+                renderSettingsState();
+            });
+        });
+
+        document.getElementById('settingsDisable2FA')?.addEventListener('click', () => {
+            const btn = document.getElementById('settingsDisable2FA');
+            withLoading(btn, async () => {
+                const session = auth.getSessionSummary();
+                if (!session) { throw new Error('Nicht eingeloggt.'); }
+                auth.disableTwoFA(session.csrfToken);
+                showBanner('info', '2FA deaktiviert.');
+                renderSettingsState();
+            });
+        });
+
+        document.getElementById('settingsSend2FATest')?.addEventListener('click', () => {
+            const btn = document.getElementById('settingsSend2FATest');
+            withLoading(btn, async () => {
+                const session = auth.getSessionSummary();
+                if (!session) { throw new Error('Nicht eingeloggt.'); }
+                const cfg = auth.getTwoFASettings(session.csrfToken);
+                if (!cfg.enabled || !cfg.contact) { throw new Error('2FA ist noch nicht eingerichtet.'); }
+                const code = auth.generateTwoFACode();
+                auth.sendTwoFACode(cfg.contact, code);
+                showBanner('success', `Demo-Code "${code}" gesendet an ${cfg.contact} (Audit Log).`);
+            });
+        });
+
+        document.getElementById('settingsRevealSeed')?.addEventListener('click', () => {
+            const btn = document.getElementById('settingsRevealSeed');
+            withLoading(btn, async () => {
+                const session = auth.getSessionSummary();
+                if (!session) { throw new Error('Nicht eingeloggt.'); }
+                const phrase = auth.exportSeedPhrase(session.csrfToken);
+                const display = document.getElementById('seedPhraseDisplay');
+                const text = document.getElementById('seedPhraseText');
+                if (display && text) { text.textContent = phrase; display.style.display = ''; }
+            });
+        });
+
+        document.getElementById('seedCopy')?.addEventListener('click', () => {
+            const text = document.getElementById('seedPhraseText')?.textContent || '';
+            navigator.clipboard?.writeText(text).then(() => showBanner('success', 'Seed-Phrase kopiert!'));
+        });
+
+        // ─── 2FA Modal helpers ───────────────────────────────────────────────
+
+        let twoFAResolve = null;
+        let twoFATimerInterval = null;
+        let storedTwoFACode = null;
+
+        function openTwoFAModal(code) {
+            storedTwoFACode = code;
+            const modal = document.getElementById('twoFAModal');
+            if (!modal) { return Promise.resolve(null); }
+            modal.classList.add('open');
+            startTwoFACountdown(5 * 60);
+            // Focus first input
+            const first = modal.querySelector('.code-inputs input');
+            if (first) { setTimeout(() => first.focus(), 100); }
+            return new Promise((resolve) => { twoFAResolve = resolve; });
+        }
+
+        function startTwoFACountdown(seconds) {
+            clearInterval(twoFATimerInterval);
+            const timerEl = document.getElementById('twoFATimer');
+            let remaining = seconds;
+            function tick() {
+                const m = Math.floor(remaining / 60);
+                const s = remaining % 60;
+                if (timerEl) { timerEl.textContent = `${m}:${String(s).padStart(2, '0')}`; }
+                if (remaining <= 0) {
+                    clearInterval(twoFATimerInterval);
+                    document.getElementById('twoFAModal')?.classList.remove('open');
+                    if (twoFAResolve) { twoFAResolve(null); twoFAResolve = null; }
+                }
+                remaining--;
+            }
+            tick();
+            twoFATimerInterval = setInterval(tick, 1000);
+        }
+
+        // Auto-advance code inputs
+        document.getElementById('codeInputs')?.querySelectorAll('input').forEach((inp, i, arr) => {
+            inp.addEventListener('input', () => {
+                inp.value = inp.value.replace(/\D/g, '').slice(-1);
+                if (inp.value && arr[i + 1]) { arr[i + 1].focus(); }
+            });
+            inp.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !inp.value && arr[i - 1]) { arr[i - 1].focus(); }
+            });
+        });
+
+        document.getElementById('twoFAVerify')?.addEventListener('click', () => {
+            const inputs = document.getElementById('codeInputs')?.querySelectorAll('input') || [];
+            const entered = Array.from(inputs).map((i) => i.value).join('');
+            try {
+                auth.verifyTwoFACode(entered, storedTwoFACode);
+                clearInterval(twoFATimerInterval);
+                document.getElementById('twoFAModal')?.classList.remove('open');
+                if (twoFAResolve) { twoFAResolve(true); twoFAResolve = null; }
+                showBanner('success', '2FA erfolgreich verifiziert!');
+            } catch (e) {
+                showBanner('error', e.message);
+            }
+        });
+
+        document.getElementById('twoFAResend')?.addEventListener('click', () => {
+            const session = auth.getSessionSummary();
+            if (!session) { return; }
+            try {
+                const cfg = auth.getTwoFASettings(session.csrfToken);
+                if (cfg.enabled && cfg.contact) {
+                    storedTwoFACode = auth.generateTwoFACode();
+                    auth.sendTwoFACode(cfg.contact, storedTwoFACode);
+                    startTwoFACountdown(5 * 60);
+                    showBanner('info', `Neuer Demo-Code: ${storedTwoFACode} (Audit Log)`);
+                }
+            } catch (e) {
+                showBanner('error', e.message);
+            }
+        });
+
+        document.getElementById('twoFAClose')?.addEventListener('click', () => {
+            clearInterval(twoFATimerInterval);
+            document.getElementById('twoFAModal')?.classList.remove('open');
+            if (twoFAResolve) { twoFAResolve(null); twoFAResolve = null; }
+        });
+
+        // ─── Forgot-Password Modal ───────────────────────────────────────────
+
+        const fpState = { contact: null, token: null };
+
+        document.getElementById('forgotPasswordLink')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            ['fpStep1','fpStep2','fpStep3'].forEach((id) => {
+                const el = document.getElementById(id);
+                if (el) { el.className = id === 'fpStep1' ? 'fp-step active' : 'fp-step'; }
+            });
+            document.getElementById('forgotModal')?.classList.add('open');
+        });
+
+        document.getElementById('forgotClose')?.addEventListener('click', () => {
+            document.getElementById('forgotModal')?.classList.remove('open');
+        });
+
+        document.getElementById('fpSendCode')?.addEventListener('click', () => {
+            const btn = document.getElementById('fpSendCode');
+            withLoading(btn, async () => {
+                const contact = document.getElementById('fpContact')?.value?.trim() || '';
+                if (!contact) { throw new Error('Bitte E-Mail oder Telefon eingeben.'); }
+                fpState.contact = contact;
+                auth.initiateForgotPassword(contact);
+                showBanner('info', 'Recovery-Code wurde gesendet (Demo: im Audit-Log gespeichert).');
+                document.getElementById('fpStep1').className = 'fp-step';
+                document.getElementById('fpStep2').className = 'fp-step active';
+            });
+        });
+
+        // Auto-advance forgot-password code inputs
+        document.getElementById('fpCodeInputs')?.querySelectorAll('input').forEach((inp, i, arr) => {
+            inp.addEventListener('input', () => {
+                inp.value = inp.value.replace(/\D/g, '').slice(-1);
+                if (inp.value && arr[i + 1]) { arr[i + 1].focus(); }
+            });
+        });
+
+        document.getElementById('fpVerifyCode')?.addEventListener('click', () => {
+            const btn = document.getElementById('fpVerifyCode');
+            withLoading(btn, async () => {
+                const inputs = document.getElementById('fpCodeInputs')?.querySelectorAll('input') || [];
+                const code = Array.from(inputs).map((i) => i.value).join('');
+                const { verifyToken } = auth.verifyRecoveryCode(fpState.contact, code);
+                fpState.token = verifyToken;
+                document.getElementById('fpStep2').className = 'fp-step';
+                document.getElementById('fpStep3').className = 'fp-step active';
+            });
+        });
+
+        document.getElementById('fpResetPw')?.addEventListener('click', () => {
+            const btn = document.getElementById('fpResetPw');
+            withLoading(btn, async () => {
+                const nw = document.getElementById('fpNewPw')?.value || '';
+                const cf = document.getElementById('fpNewPwConfirm')?.value || '';
+                await auth.resetPasswordWithRecoveryCode(fpState.contact, fpState.token, nw, cf);
+                showBanner('success', 'Passwort erfolgreich zurückgesetzt! Bitte neu anmelden.');
+                document.getElementById('forgotModal')?.classList.remove('open');
+                fpState.contact = null; fpState.token = null;
+            });
+        });
+
+        // ─── MTK/NEC Economy Section ────────────────────────────────────────
+
+        let mtkNecInitialized = false;
+
+        function initMtkNecSection() {
+            if (!mtkNecInitialized) {
+                // Build SI prefix table
+                const tbody = document.getElementById('siTableBody');
+                if (tbody) {
+                    SI_PREFIXES.forEach(({ exp, symbol, name, value }) => {
+                        const tr = document.createElement('tr');
+                        tr.style.borderTop = '1px solid var(--border)';
+                        tr.innerHTML = `
+                            <td style="padding:3px 8px;">10<sup>${exp}</sup></td>
+                            <td style="text-align:center;padding:3px 8px;">${symbol || '—'}</td>
+                            <td style="text-align:center;padding:3px 8px;">${name}</td>
+                            <td style="text-align:right;padding:3px 8px;font-family:monospace;">${value.toExponential(0)}</td>`;
+                        tbody.appendChild(tr);
+                    });
+                }
+                mtkNecInitialized = true;
+            }
+
+            // Layer calculator
+            document.getElementById('mtkCalcBtn')?.addEventListener('click', () => {
+                const base = parseFloat(document.getElementById('mtkBaseAmount')?.value) || 100;
+                const steps = parseInt(document.getElementById('mtkSteps')?.value, 10) || 1;
+                const disc = parseFloat(document.getElementById('mtkDiscount')?.value) || 0;
+                const res = sheet3WertLogik(base, steps, disc);
+                document.getElementById('mtkLayerResult').textContent = JSON.stringify(res, null, 2);
+            });
+
+            // Dice
+            document.getElementById('necDiceBtn')?.addEventListener('click', () => {
+                const res = necDiscountDice();
+                document.getElementById('necDiceResult').textContent =
+                    `Augenzahl: ${res.roll}\nRabatt (roh): ${res.rawPercent} %\nRabatt (begrenzt): ${res.clampedPercent} %`;
+            });
+
+            // RPS
+            document.getElementById('necRpsBtn')?.addEventListener('click', () => {
+                const r = ['rps0','rps1','rps2'].map((id) => document.getElementById(id)?.value || 'draw');
+                const res = necDiscountRPS(r);
+                document.getElementById('necRpsResult').textContent =
+                    `Runden: ${r.join(', ')}\nPunkte gesamt: ${res.totalPoints}\nRabatt: ${res.discountPercent} %`;
+            });
+
+            // Escrow
+            document.getElementById('escrowCalcBtn')?.addEventListener('click', () => {
+                const amount = parseFloat(document.getElementById('escrowAmount')?.value) || 1000;
+                const dir = document.getElementById('escrowDirection')?.value || 'A→C';
+                const disc = parseFloat(document.getElementById('escrowDiscount')?.value) || 0;
+                const tl = document.getElementById('escrowTimeline')?.value || '3D';
+                try {
+                    const res = perpetualEscrow(amount, dir, disc, tl);
+                    document.getElementById('escrowResult').textContent = JSON.stringify(res, null, 2);
+                } catch (e) {
+                    document.getElementById('escrowResult').textContent = `Fehler: ${e.message}`;
+                }
+            });
+
+            // Contract / Sheet 4
+            document.getElementById('contractGenBtn')?.addEventListener('click', () => {
+                const contract = sheet4Vertrag({
+                    seller: document.getElementById('contractSeller')?.value || 'Person1',
+                    buyer:  document.getElementById('contractBuyer')?.value  || 'Person2',
+                    item:   document.getElementById('contractItem')?.value   || 'Artikel',
+                    mtkAmount: parseFloat(document.getElementById('contractMTK')?.value) || 500,
+                    discountPercent: 0,
+                    direction: 'A→C',
+                    timeline: '3D',
+                });
+                document.getElementById('contractResult').textContent = JSON.stringify(contract, null, 2);
+            });
+
+            // 30K Axiom
+            document.getElementById('axiom30kBtn')?.addEventListener('click', () => {
+                const val = parseFloat(document.getElementById('axiom30kInput')?.value) || 30000;
+                const res = apply30KAxiom(val);
+                document.getElementById('axiom30kResult').textContent =
+                    `Vor Komma  (×0.9967): ${res.integer.toFixed(4)}\nNach Komma (×0.0367): ${res.fractional.toFixed(4)}\nGesamt:               ${res.total.toFixed(4)}`;
+            });
+        }
+
+        // ─── Close modals on backdrop click ─────────────────────────────────
+
+        document.querySelectorAll('.modal-backdrop').forEach((backdrop) => {
+            backdrop.addEventListener('click', (e) => {
+                if (e.target === backdrop) { backdrop.classList.remove('open'); }
+            });
+        });
         Promise.resolve()
             .then(() => handleOAuthCallbackFromUrl())
             .catch((error) => {
