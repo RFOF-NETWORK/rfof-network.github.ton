@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RFOF-NETWORK Tokenizer Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            animation: fadeIn 0.6s ease-in;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            animation: slideUp 0.6s ease-out;
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .card.bpe h2 {
+            color: #764ba2;
+            border-bottom-color: #764ba2;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .bpe button {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+
+        .result {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .bpe .result {
+            border-left-color: #764ba2;
+        }
+
+        .result h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .result-content {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            line-height: 1.6;
+        }
+
+        .token-visualization {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .token {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .bpe .token {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .bpe .stat-value {
+            color: #764ba2;
+        }
+
+        .info {
+            background: #e8f4f8;
+            border-left: 4px solid #0d9fb8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+            color: #333;
+        }
+
+        .info strong {
+            color: #0d9fb8;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: 50px;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        footer a {
+            color: white;
+            text-decoration: none;
+            border-bottom: 1px solid white;
+        }
+
+        .error {
+            background: #fee;
+            border-left-color: #c33;
+            color: #c33;
+        }
+
+        .success {
+            background: #efe;
+            border-left-color: #3c3;
+            color: #3c3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 RFOF-NETWORK Tokenizer</h1>
+            <p>Interaktive Demo: Wie LLMs Text verstehen</p>
+        </header>
+
+        <div class="content">
+            <!-- CharTokenizer Card -->
+            <div class="card">
+                <h2>🔤 Zeichen-Tokenizer</h2>
+                
+                <div class="info">
+                    <strong>Wie es funktioniert:</strong> Jedes Zeichen (Buchstabe, Zahl, Sonderzeichen) bekommt eine eindeutige Zahl (ID). Das ist der erste Schritt, wie LLMs Text verarbeiten.
+                </div>
+
+                <div class="form-group">
+                    <label for="charInput">Text eingeben:</label>
+                    <textarea id="charInput" placeholder="z.B.: Hallo Welt! RFOF-NETWORK 2026..."></textarea>
+                </div>
+
+                <button onclick="tokenizeChar()">📊 Tokenisieren</button>
+
+                <div id="charResult" class="result">
+                    <h3>Ergebnis:</h3>
+                    <div class="result-content" id="charOutput"></div>
+                    
+                    <div class="stats">
+                        <div class="stat">
+                            <div class="stat-label">Zeichen</div>
+                            <div class="stat-value" id="charCount">0</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-label">Tokens</div>
+                            <div class="stat-value" id="charTokenCount">0</div>
+                        </div>
+                    </div>
+
+                    <div class="token-visualization" id="charTokens"></div>
+                </div>
+            </div>
+
+            <!-- BPETokenizer Card -->
+            <div class="card bpe">
+                <h2>🧩 BPE-Tokenizer</h2>
+                
+                <div class="info">
+                    <strong>Wie es funktioniert:</strong> BPE (Byte Pair Encoding) lernt häufige Buchstaben-Kombinationen und fasst sie zu einem Token zusammen. Das ist wie echte LLMs (GPT, Llama) arbeiten.
+                </div>
+
+                <div class="form-group">
+                    <label for="bpeTraining">Trainingstext:</label>
+                    <textarea id="bpeTraining" placeholder="z.B.: python python python lernen lernen programmieren">python python python lernen lernen programmieren</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="bpeMerges">Anzahl Merge-Schritte:</label>
+                    <input type="number" id="bpeMerges" value="10" min="1" max="50">
+                </div>
+
+                <button onclick="trainBPE()">🎓 Trainieren</button>
+
+                <div class="form-group" style="margin-top: 20px;">
+                    <label for="bpeInput">Zu tokenisierendes Wort:</label>
+                    <input type="text" id="bpeInput" placeholder="z.B.: python, programmieren..." value="python">
+                </div>
+
+                <button onclick="tokenizeBPE()">📊 Tokenisieren</button>
+
+                <div id="bpeResult" class="result">
+                    <h3>Ergebnis:</h3>
+                    <div class="result-content" id="bpeOutput"></div>
+                    
+                    <div class="stats">
+                        <div class="stat">
+                            <div class="stat-label">Merge-Regeln</div>
+                            <div class="stat-value" id="bpeMergeCount">0</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-label">Tokens</div>
+                            <div class="stat-value" id="bpeTokenCount">0</div>
+                        </div>
+                    </div>
+
+                    <div class="token-visualization" id="bpeTokens"></div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Made with ❤️ by RFOF-NETWORK | 
+            <a href="https://github.com/RFOF-NETWORK/rfof-network.github.ton">GitHub Repo</a> | 
+            Powered by Copilot Agent</p>
+        </footer>
+    </div>
+
+    <script>
+        // === CharTokenizer Implementation (JavaScript) ===
+        class CharTokenizer {
+            constructor() {
+                const buchstaben_gross = "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ";
+                const buchstaben_klein = "abcdefghijklmnopqrstuvwxyzäöüß";
+                const zahlen = "0123456789";
+                const sonderzeichen = " .,!?-_:;()[]{}'\"/\\@#$%&*+=<>\n";
+                
+                const alle_zeichen = buchstaben_gross + buchstaben_klein + zahlen + sonderzeichen;
+                
+                this.token_zu_id = {"<UNK>": 0};
+                this.id_zu_token = {0: "<UNK>"};
+                
+                const unique_chars = [...new Set(alle_zeichen)].sort();
+                let id = 1;
+                for (const char of unique_chars) {
+                    this.token_zu_id[char] = id;
+                    this.id_zu_token[id] = char;
+                    id++;
+                }
+                
+                this.vokabular_groesse = Object.keys(this.token_zu_id).length;
+            }
+            
+            encode(text) {
+                return text.split('').map(z => this.token_zu_id[z] !== undefined ? this.token_zu_id[z] : 0);
+            }
+            
+            decode(ids) {
+                return ids.map(i => this.id_zu_token[i] || "<UNK>").join('');
+            }
+        }
+
+        // === BPETokenizer Implementation (JavaScript) ===
+        class BPETokenizer {
+            constructor(anzahl_merges = 20) {
+                this.anzahl_merges = anzahl_merges;
+                this.merge_regeln = [];
+            }
+            
+            static _wort_in_symbole(wort) {
+                return [...wort, "</w>"];
+            }
+            
+            trainieren(text, verbose = false) {
+                const woerter = text.split(" ").filter(w => w);
+                let wort_symbole = woerter.map(w => BPETokenizer._wort_in_symbole(w));
+                
+                for (let schritt = 0; schritt < this.anzahl_merges; schritt++) {
+                    const paar_haeufigkeit = {};
+                    
+                    for (const symbole of wort_symbole) {
+                        for (let i = 0; i < symbole.length - 1; i++) {
+                            const paar = symbole[i] + "|" + symbole[i + 1];
+                            paar_haeufigkeit[paar] = (paar_haeufigkeit[paar] || 0) + 1;
+                        }
+                    }
+                    
+                    if (Object.keys(paar_haeufigkeit).length === 0) break;
+                    
+                    const haeufigstes_paar = Object.entries(paar_haeufigkeit)
+                        .sort((a, b) => b[1] - a[1])[0];
+                    
+                    if (!haeufigstes_paar || haeufigstes_paar[1] < 2) break;
+                    
+                    const [paar_str, anzahl] = haeufigstes_paar;
+                    const [char1, char2] = paar_str.split("|");
+                    const neues_token = char1 + char2;
+                    
+                    this.merge_regeln.push([char1, char2]);
+                    
+                    wort_symbole = wort_symbole.map(symbole => {
+                        const neue_symbole = [];
+                        let i = 0;
+                        while (i < symbole.length) {
+                            if (i < symbole.length - 1 && symbole[i] === char1 && symbole[i + 1] === char2) {
+                                neue_symbole.push(neues_token);
+                                i += 2;
+                            } else {
+                                neue_symbole.push(symbole[i]);
+                                i++;
+                            }
+                        }
+                        return neue_symbole;
+                    });
+                    
+                    if (verbose) console.log(`Schritt ${schritt + 1}: ${paar_str} -> '${neues_token}'`);
+                }
+            }
+            
+            tokenisieren(wort) {
+                let symbole = BPETokenizer._wort_in_symbole(wort);
+                
+                for (const [char1, char2] of this.merge_regeln) {
+                    const neues_token = char1 + char2;
+                    const neue_symbole = [];
+                    let i = 0;
+                    while (i < symbole.length) {
+                        if (i < symbole.length - 1 && symbole[i] === char1 && symbole[i + 1] === char2) {
+                            neue_symbole.push(neues_token);
+                            i += 2;
+                        } else {
+                            neue_symbole.push(symbole[i]);
+                            i++;
+                        }
+                    }
+                    symbole = neue_symbole;
+                }
+                
+                return symbole;
+            }
+        }
+
+        // === Global State ===
+        let charTokenizer = new CharTokenizer();
+        let bpeTokenizer = new BPETokenizer();
+
+        // === CharTokenizer Functions ===
+        function tokenizeChar() {
+            const text = document.getElementById('charInput').value;
+            
+            if (!text.trim()) {
+                showError('charResult', 'Bitte geben Sie einen Text ein!');
+                return;
+            }
+            
+            try {
+                const ids = charTokenizer.encode(text);
+                const decoded = charTokenizer.decode(ids);
+                const isCorrect = decoded === text;
+                
+                const output = `<strong>Original:</strong> "${text}"<br>
+                               <strong>Token IDs:</strong> [${ids.join(', ')}]<br>
+                               <strong>Dekodiert:</strong> "${decoded}"<br>
+                               <strong>Korrekt?</strong> ${isCorrect ? '✅ Ja' : '❌ Nein'}`;
+                
+                document.getElementById('charOutput').innerHTML = output;
+                document.getElementById('charCount').textContent = text.length;
+                document.getElementById('charTokenCount').textContent = ids.length;
+                
+                const tokenVisualization = ids.map((id, idx) => 
+                    `<span class="token" title="ID: ${id}">${text[idx]} (${id})</span>`
+                ).join('');
+                document.getElementById('charTokens').innerHTML = tokenVisualization;
+                
+                document.getElementById('charResult').classList.add('show');
+            } catch (error) {
+                showError('charResult', `Fehler: ${error.message}`);
+            }
+        }
+
+        // === BPETokenizer Functions ===
+        function trainBPE() {
+            const trainText = document.getElementById('bpeTraining').value;
+            const merges = parseInt(document.getElementById('bpeMerges').value);
+            
+            if (!trainText.trim()) {
+                showError('bpeResult', 'Bitte geben Sie einen Trainingstext ein!');
+                return;
+            }
+            
+            try {
+                bpeTokenizer = new BPETokenizer(merges);
+                bpeTokenizer.trainieren(trainText);
+                
+                const output = `<strong>Trainiert mit:</strong> "${trainText}"<br>
+                               <strong>Merge-Regeln gelernt:</strong> ${bpeTokenizer.merge_regeln.length}<br>
+                               <strong>Regeln:</strong> ${bpeTokenizer.merge_regeln.map(r => `'${r.join("")}'`).join(', ') || 'Keine'}`;
+                
+                document.getElementById('bpeOutput').innerHTML = output;
+                document.getElementById('bpeMergeCount').textContent = bpeTokenizer.merge_regeln.length;
+                document.getElementById('bpeTokenCount').textContent = '0';
+                document.getElementById('bpeTokens').innerHTML = '';
+                
+                document.getElementById('bpeResult').classList.add('show');
+            } catch (error) {
+                showError('bpeResult', `Fehler beim Training: ${error.message}`);
+            }
+        }
+
+        function tokenizeBPE() {
+            const word = document.getElementById('bpeInput').value;
+            
+            if (!word.trim()) {
+                showError('bpeResult', 'Bitte geben Sie ein Wort ein!');
+                return;
+            }
+            
+            if (bpeTokenizer.merge_regeln.length === 0) {
+                showError('bpeResult', 'Bitte trainieren Sie zuerst das Modell!');
+                return;
+            }
+            
+            try {
+                const tokens = bpeTokenizer.tokenisieren(word);
+                
+                const output = `<strong>Wort:</strong> "${word}"<br>
+                               <strong>Tokens:</strong> [${tokens.map(t => `'${t}'`).join(', ')}]<br>
+                               <strong>Anzahl Tokens:</strong> ${tokens.length}`;
+                
+                document.getElementById('bpeOutput').innerHTML = output;
+                document.getElementById('bpeTokenCount').textContent = tokens.length;
+                
+                const tokenVisualization = tokens.map(token => 
+                    `<span class="token">${token}</span>`
+                ).join('');
+                document.getElementById('bpeTokens').innerHTML = tokenVisualization;
+                
+                document.getElementById('bpeResult').classList.add('show');
+            } catch (error) {
+                showError('bpeResult', `Fehler: ${error.message}`);
+            }
+        }
+
+        // === Helper Functions ===
+        function showError(elementId, message) {
+            const resultElement = document.getElementById(elementId);
+            resultElement.classList.add('show', 'error');
+            resultElement.querySelector('.result-content').innerHTML = `<strong>⚠️ ${message}</strong>`;
+        }
+
+        // === Auto-tokenize on Enter ===
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('charInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && e.ctrlKey) tokenizeChar();
+            });
+            
+            document.getElementById('bpeInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && e.ctrlKey) tokenizeBPE();
+            });
+        });
+    </script>
+</body>
+</html>
