@@ -99,3 +99,36 @@ test('session timeout clears the active session automatically', async () => {
     now = result.session.expiresAt + 1;
     assert.equal(auth.getSessionSummary(), null);
 });
+
+test('oauth callback simulation logs in and links to active system account', async () => {
+    const storage = createMemoryStorage();
+    const auth = new AuthManager({ storage, now: () => 1_700_000_000_000 });
+    await auth.register('linked.user', 'Sicher!2026', 'Sicher!2026');
+    const stateToken = auth.createOAuthState('github');
+
+    const oauth = await auth.completeOAuthCallback('github', {
+        code: 'gh-123',
+        state: stateToken
+    });
+
+    assert.equal(oauth.user.username, 'linked.user');
+    assert.equal(auth.getSessionSummary().authRoute, 'oauth2');
+    assert.equal(auth.getSessionSummary().authProvider, 'github');
+    assert.equal(Boolean(auth.getUser('linked.user').oauthLinks.github), true);
+
+    auth.logout(oauth.session.csrfToken, 'oauth logout');
+    assert.equal(auth.getSessionSummary(), null);
+    const systemSession = await auth.login('linked.user', 'Sicher!2026');
+    assert.equal(auth.getSessionSummary().authRoute, 'system');
+    auth.logout(systemSession.session.csrfToken, 'cleanup');
+});
+
+test('admin can export audit logs and user overview', async () => {
+    const storage = createMemoryStorage();
+    const auth = new AuthManager({ storage, now: () => 1_700_000_000_000 });
+    const registered = await auth.register('admin.demo', 'Sicher!2026', 'Sicher!2026');
+    const logJson = auth.exportAuditLogs(registered.session.csrfToken);
+    const userJson = auth.exportUserOverview(registered.session.csrfToken);
+    assert.equal(Array.isArray(JSON.parse(logJson)), true);
+    assert.equal(Array.isArray(JSON.parse(userJson)), true);
+});

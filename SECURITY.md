@@ -27,9 +27,12 @@
 - **CSRF-Schutz**: Jede Sitzung erhält ein CSRF-Token; Logout erfordert
   dessen Vorlage.
 - **XSS-Prävention**: Benutzernamen werden vor Verarbeitung sanitiert.
+- **OAuth2-Demo mit Callback-State**: GitHub/Google/Microsoft nutzen
+  einen validierten `state`-Wert für den simulierten Callback-Flow.
 - **HTTPS only**: GitHub Pages liefert ausschließlich über HTTPS aus.
 - **Audit-Logging**: Alle Auth-Ereignisse werden mit Zeitstempel
   protokolliert.
+- **2FA-Hinweis**: TOTP/WebAuthn ist als Backend-Upgrade vorgesehen.
 
 ## Sicherheitslücke melden
 
