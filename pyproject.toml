@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multi_spark_tokenizer_python_paket"
-version = "0.0.1"
+version = "0.1.0"
 description = "PRAIAI Tokenizer Package - Copilot powered Python tokenizers"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -25,6 +25,10 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
 ]
 
-[project.urls]
-Homepage = "https://github.com/RFOF-NETWORK/rfof-network.github.ton"
-Repository = "https://github.com/RFOF-NETWORK/rfof-network.github.ton.git"
+[tool.setuptools]
+packages = ["multi_spark_tokenizer_python_paket"]
+
+[tool.setuptools.package-dir]
+"multi_spark_tokenizer_python_paket" = "."
+
+
