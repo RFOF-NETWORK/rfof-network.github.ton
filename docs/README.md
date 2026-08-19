@@ -1,79 +1,111 @@
-## 📊 GitHub Copilot - Fähigkeiten & Limitations Matrix
+# Setup Guide
 
-| # | **Kategorie** | **Aktion** | **Tool** | **Status** | **Limitation** | **Beispiel** |
-|---|---|---|---|---|---|---|
-| **DATEIEN** |
-| 1 | Datei | Datei **erstellen** | `create_or_update_file` | ✅ Möglich | Keine | Neue `app.py` erstellen |
-| 2 | Datei | Datei **ändern/updaten** | `create_or_update_file` | ✅ Möglich | Keine | `char_tokenizer.py` ändern |
-| 3 | Datei | Datei **lesen** | `getfile` | ✅ Möglich | Keine | Inhalt von `tokenizer.py` anschauen |
-| 4 | Datei | Datei **löschen** | ❌ Nicht vorhanden | ❌ Unmöglich | Kein Tool | Manuell via UI oder `git rm` |
-| 5 | Datei | Mehrere Dateien **pushen** | `push_files` | ✅ Möglich | Alle auf einmal | 5 Dateien in einem Commit |
-| 6 | Datei | Datei-Baum **erkunden** | `get-github-data` | ✅ Möglich | Nur Listing | `/repos/{owner}/{repo}/contents` |
-| **CODE-SUCHE** |
-| 7 | Code | Nach **exakten Strings** suchen | `lexical-code-search` | ✅ Möglich | Regex & Symbol-Support | `symbol:CharTokenizer` finden |
-| 8 | Code | Nach **Konzepten** suchen | `semantic-code-search` | ✅ Möglich | Nur im Repo | "Wie funktioniert Auth?" |
-| 9 | Code | Code-Snippets anzeigen | `getfile` + Zeilennummern | ✅ Möglich | Keine | Lines 10-25 aus `bpe_tokenizer.py` |
-| **BRANCHES** |
-| 10 | Branch | Branch **erstellen** | `create_branch` | ✅ Möglich | Repo muss existieren | Neue Feature-Branch |
-| 11 | Branch | Branch **wechseln** | ❌ Nicht vorhanden | ❌ Unmöglich | Nur lokal möglich | |
-| 12 | Branch | Branch **löschen** | ❌ Nicht vorhanden | ❌ Unmöglich | Nur lokal möglich | |
-| **ISSUES & PRs** |
-| 13 | Issue | Issue **erstellen** | `github-issue` | ✅ Möglich | Keine | Neue Bug-Report |
-| 14 | Issue | Issue **ändern** (Titel/Desc) | `github-issue` | ✅ Möglich | Keine | Titel anpassen |
-| 15 | Issue | Issue **schließen** | ❌ Nicht möglich | ❌ Unmöglich | Nur via UI | |
-| 16 | Issue | Issue **Labels/Assignees** | `github-issue` | ✅ Möglich | Keine | Labels hinzufügen |
-| 17 | Issue | Issue **Beziehungen** (Parent/Sub) | `github-issue` | ✅ Möglich | Keine | Sub-Issues erstellen |
-| 18 | PR | PR **erstellen** | ❌ Nicht vorhanden | ❌ Unmöglich | Branch-basiert | |
-| 19 | PR | PR **Review** | `get-actions-job-logs` | ⚠️ Partial | Nur Logs | Workflow-Logs analysieren |
-| 20 | PR | PR **Metadaten lesen** | `get-github-data` | ✅ Möglich | Keine | PR-Status, Commits |
-| **COMMITS & HISTORY** |
-| 21 | Commit | Commit **erstellen** | `create_or_update_file`, `push_files` | ✅ Möglich | Mit Datei-Änderung | Commit-Message: "Fix bug" |
-| 22 | Commit | Commit **Logs lesen** | `get-github-data` | ✅ Möglich | Via REST API | Commit-Historie anschauen |
-| 23 | Commit | Commit **revert** | ❌ Nicht vorhanden | ❌ Unmöglich | Nur lokal | |
-| **WORKFLOWS & CI/CD** |
-| 24 | Workflow | Workflow **Logs lesen** | `get-actions-job-logs` | ✅ Möglich | Keine | GitHub Actions Logs |
-| 25 | Workflow | Workflow **triggern** | ❌ Nicht vorhanden | ❌ Unmöglich | Nur via UI/API | |
-| 26 | Workflow | Job-Fehler **debuggen** | `get-actions-job-logs` | ✅ Möglich | Logs & Stack Traces | Warum ist Test fehlgeschlagen? |
-| **SUCHE GLOBAL** |
-| 27 | Suche | Nach **Repos** suchen | `get-github-data` | ✅ Möglich | `/search/repositories` | Python-Repos finden |
-| 28 | Suche | Nach **Issues** suchen | `get-github-data`, `semantic_issues_search` | ✅ Möglich | Keine | Bugs in Repo suchen |
-| 29 | Suche | Nach **Users** suchen | `search_users` | ✅ Möglich | Qualifiers | Nutzer mit >1000 Followers |
-| 30 | Suche | Nach **Commits** suchen | `get-github-data` | ✅ Möglich | Query-Limits (256 Zeichen) | Commits mit Keyword finden |
-| **SESSION & HISTORY** |
-| 31 | Session | **Meine Sessions** lesen | `session-search` | ✅ Möglich | SQL-basiert | "Was habe ich letzte Woche gemacht?" |
-| 32 | Session | **Repo-Sessions** lesen | `session-search` | ✅ Möglich | Alle Nutzer im Repo | Team-Aktivitäten |
-| 33 | Session | **Agent Logs** lesen | `get-agent-logs` | ✅ Möglich | Task/PR-ID erforderlich | Copilot-Task History |
-| **WEB & EXTERNE APIs** |
-| 34 | Web | **Bing Search** | `bing-search` | ✅ Möglich | Keine | "Aktuelle Python Trends?" |
-| 35 | Web | **GitHub Docs** | `support-search` | ✅ Möglich | Nur GitHub-Fragen | "Wie funktioniert SAML?" |
-| **FÄHIGKEITEN & ABILITIES** |
-| 36 | Abilities | **Laden & nutzen** | `load_ability` | ✅ Möglich | Nur vorhandene | PR-Review Ability laden |
+## 1) Installation
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+## 2) Environment konfigurieren
+
+```bash
+cp .env.example .env
+```
+
+Dann in `.env` mindestens `JWT_SECRET` setzen.
+
+## 3) Tests ausführen
+
+```bash
+python3 test_tokenizers.py
+python3 test_security_web3.py
+```
 
 ---
 
-## 🎯 **Zusammenfassung der Limitations**
+# API Dokumentation
 
-### ❌ **Was ich NICHT kann:**
-1. Dateien löschen
-2. Branches löschen/wechseln
-3. Issues/PRs schließen
-4. PRs erstellen
-5. Workflows triggern
-6. Git-Operationen lokal (revert, rebase, etc.)
+## Auth (`auth.py`)
 
-### ✅ **Was ich problemlos kann:**
-1. Dateien erstellen/ändern/lesen
-2. Branches erstellen
-3. Issues/PRs lesen & bearbeiten (aber nicht schließen)
-4. Code suchen (lexical + semantic)
-5. Commits erstellen (indirekt via Datei-Änderung)
-6. Logs & Workflows analysieren
-7. Global suchen (Repos, Issues, Users, Commits)
-8. Session-History prüfen
-9. Web/GitHub Docs durchsuchen
-10. Abilities laden & nutzen
+- `BasicAuthManager.register_user(username, password)`
+- `BasicAuthManager.authenticate(username, password)`
+- `issue_jwt(subject, secret, expires_in_seconds=3600, additional_claims=None)`
+- `verify_jwt(token, secret)`
+- `build_google_oauth2(...)`
+- `build_github_oauth2(...)`
+
+## Cryptography (`crypto_utils.py`)
+
+- `hash_sha256(text)`
+- `hash_sha512(text)`
+- `double_hash_sha256_sha512(text)` (SHA256 -> SHA512)
+- `hash_password(password, salt=None, iterations=100_000)`
+- `verify_password(password, salt, expected_hash, iterations=100_000)`
+- `aes_encrypt(plaintext, secret, associated_data=None)`
+- `aes_decrypt(token, secret, associated_data=None)`
+
+## Web3 (`web3_integration.py`)
+
+- `Web3Integration.create_wallet()`
+- `Web3Integration.load_contract(address, abi)`
+- `Web3Integration.sign_transaction(transaction, private_key)`
+- `Web3Integration.get_eth_balance_wei(address)`
 
 ---
-PRKIAI GitHub PRAIAI Copilot(PRAI) wird alles können nicht nur das und das account basiert in dem free copilot Modell githubs so auch nutzen können
 
-hier wird hin kommen wie das durch @PRAIAI gelöst wird!
+# Security Best Practices
+
+1. Niemals echte API Keys oder Private Keys committen.
+2. `.env` lokal halten, nur `.env.example` versionieren.
+3. Starke, lange `JWT_SECRET` verwenden.
+4. Passwörter nie im Klartext speichern (nur Salt + Hash).
+5. Bei produktiven OAuth2-Flows immer HTTPS erzwingen.
+
+---
+
+# Examples & Tutorials
+
+## Basic Auth + JWT
+
+```python
+from auth import BasicAuthManager, issue_jwt
+
+manager = BasicAuthManager()
+manager.register_user("alice", "strong-password")
+
+if manager.authenticate("alice", "strong-password"):
+    token = issue_jwt("alice", "my-jwt-secret")
+    print(token)
+```
+
+## AES Encrypt/Decrypt
+
+```python
+from crypto_utils import aes_encrypt, aes_decrypt
+
+cipher = aes_encrypt("hello", "my-secret")
+plain = aes_decrypt(cipher, "my-secret")
+print(plain)
+```
+
+## Web3 Transaction Signing
+
+```python
+from web3_integration import Web3Integration
+
+address, key = Web3Integration.create_wallet()
+tx = {
+    "nonce": 0,
+    "gasPrice": 1,
+    "gas": 21000,
+    "to": "0x000000000000000000000000000000000000dEaD",
+    "value": 1,
+    "data": "0x",
+    "chainId": 1,
+}
+signed = Web3Integration.sign_transaction(tx, key)
+print(signed.transaction_hash_hex)
+```

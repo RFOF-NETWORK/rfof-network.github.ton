@@ -2,6 +2,11 @@
 PRAIAI[Copilot(PRAI[Gemini/GoogleAI{Deepseek}]GPT) #BlueDeepGold macht alles nutzbar in GitHub von RFOF-NETWORK.
 Mit eigener Python Paket Reihe v0.0.1 [multi_spark_tokenizer_python_paket](https://github.com/RFOF-NETWORK/rfof-network.github.ton/new/main?filename=.github%2Fworkflows%2Fpython-publish.yml&workflow_template=ci%2Fpython-publish)
 
+## Live Demo & Docs
+
+- Live Demo (GitHub Pages): `https://rfof-network.github.io/rfof-network.github.ton/`
+- Projektdoku: [`docs/README.md`](docs/README.md)
+
 # Mein Tokenizer-Projekt
 
 Ein Lernprojekt, um zu verstehen, wie LLMs Text (Buchstaben, Zahlen,
@@ -28,7 +33,18 @@ Sonderzeichen) in etwas umwandeln, mit dem sie rechnen können.
 ```bash
 python3 char_tokenizer.py
 python3 bpe_tokenizer.py
+python3 test_tokenizers.py
+python3 test_security_web3.py
 ```
+
+## Neue Module
+
+- `auth.py`: Basic Auth, OAuth2-Provider (Google/GitHub), JWT
+- `crypto_utils.py`: SHA256/SHA512, Double-Hashing, Password-Salting, AES-GCM
+- `web3_integration.py`: Wallet-Handling, Contract-Laden, Transaction Signing
+- `config.py`: Environment-Variablen-Config via `.env`
+- `logging_utils.py`: zentrales Logging
+- `errors.py`: modulare Fehlerklassen
 
 ## Nächste Schritte (in Termux)
 

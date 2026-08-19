@@ -1,2 +1,7 @@
 setuptools>=45
 wheel>=0.36
+cryptography>=43.0.0
+PyJWT>=2.9.0
+python-dotenv>=1.0.1
+requests>=2.32.3
+web3>=7.0.0
