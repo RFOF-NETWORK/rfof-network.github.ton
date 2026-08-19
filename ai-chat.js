@@ -315,7 +315,15 @@ function renderMessageContent(text) {
                     document.createTextNode(part.slice(last, match.index))
                 );
                 const a = document.createElement('a');
-                a.href = match[1];
+                // Validate URL: only allow http/https to prevent javascript: URI injection
+                let safeUrl = '#';
+                try {
+                    const parsed = new URL(match[1]);
+                    if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+                        safeUrl = parsed.href;
+                    }
+                } catch (_) { /* invalid URL */ }
+                a.href = safeUrl;
                 a.target = '_blank';
                 a.rel = 'noopener noreferrer';
                 a.style.color = '#60a5fa';
