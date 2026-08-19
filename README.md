@@ -25,6 +25,9 @@ Mit eigener Python Paket Reihe v0.1.0 **multi_spark_tokenizer_python_paket**
 - Dual-Session-Handling (OAuth2 oder System Account) mit einheitlichem Logout
 - AES-256-GCM Secure Note, SHA256→SHA512 Passwort-Flow, Lockout, Audit Logs
 - Admin Panel mit User-Überblick und Export-Funktionen
+- **PRAIAI Chat UI** im Frontend mit lokaler Antwort-Engine (Demo, kein externer API-Key nötig)
+- Rollen-Quota für Chat: **Admin unbegrenzt**, **User mit Tageslimit** (Nachrichten/Tokens)
+- Silent-Autonomy-Hinweise für erkannte Themen (z. B. Wallet/Admin/Security/Tokenizer)
 
 ## Schneller Test
 
@@ -108,4 +111,3 @@ braucht oder trainieren muss.
 ## Lizenz
 
 Siehe [PRAIAI_LICENSE](./PRAIAI_LICENSE)
-
