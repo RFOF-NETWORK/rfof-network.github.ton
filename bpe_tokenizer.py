@@ -71,3 +71,29 @@ class BPETokenizer:
         for paar in self.merge_regeln:
             symbole = self._merge_in_symbolen(symbole, paar, "".join(paar))
         return symbole
+
+
+def demo():
+    """Demo des BPETokenizers mit Beispieltexten."""
+    trainingstext = (
+        "python python python lernen lernen lernen lernen "
+        "netzwerk netzwerk netzwerk token token token token token "
+        "rfof rfof rfof rfof rfof network network network"
+    )
+
+    tok = BPETokenizer(anzahl_merges=15)
+    tok.trainieren(trainingstext, verbose=True)
+
+    print("\n" + "=" * 60)
+    print("BPE-Tokenizer Demo")
+    print("=" * 60)
+    print(f"Gelernte Merge-Regeln: {len(tok.merge_regeln)}")
+
+    test_woerter = ["python", "lernen", "netzwerk", "token", "rfof", "network"]
+    for wort in test_woerter:
+        tokens = tok.tokenisieren(wort)
+        print(f"  '{wort}' -> {tokens}")
+
+
+if __name__ == "__main__":
+    demo()

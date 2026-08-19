@@ -5,7 +5,8 @@ setup(
     version="0.2.0",
     author="RFOF-NETWORK",
     description="PRAIAI Tokenizer Package - Copilot powered Python tokenizers",
-    packages=find_packages(),
+    packages=["multi_spark_tokenizer_python_paket"],
+    package_dir={"multi_spark_tokenizer_python_paket": "."},
     python_requires=">=3.8",
     install_requires=[
         "cryptography>=43.0.0",
@@ -17,8 +18,8 @@ setup(
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
-        "Topic :: Scientific/Engineering :: Künstlich Intelligente Axiometrix InterIntelligenz",
-        "License :: OSI Approved :: MIT License, International use License/d, Non Comercial Use License/d",
+        "Topic :: Scientific/Engineering :: Artificial Intelligence",
+        "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
     ],
 )

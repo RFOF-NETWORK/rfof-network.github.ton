@@ -5,7 +5,9 @@
 [![Final Deploy](https://github.com/RFOF-NETWORK/rfof-network.github.ton/actions/workflows/final-deploy.yml/badge.svg)](https://github.com/RFOF-NETWORK/rfof-network.github.ton/actions/workflows/final-deploy.yml)
 
 PRAIAI[Copilot(PRAI[Gemini/GoogleAI{Deepseek}]GPT) #BlueDeepGold macht alles nutzbar in GitHub von RFOF-NETWORK.
-Mit eigener Python Paket Reihe v0.0.1 [multi_spark_tokenizer_python_paket](https://github.com/RFOF-NETWORK/rfof-network.github.ton/new/main?filename=.github%2Fworkflows%2Fpython-publish.yml&workflow_template=ci%2Fpython-publish)
+Mit eigener Python Paket Reihe v0.1.0 **multi_spark_tokenizer_python_paket**
+
+[![Python Package](https://github.com/RFOF-NETWORK/rfof-network.github.ton/actions/workflows/python-publish.yml/badge.svg)](https://github.com/RFOF-NETWORK/rfof-network.github.ton/actions/workflows/python-publish.yml)
 
 ## Live Demo & Docs
 
@@ -52,6 +54,12 @@ Sonderzeichen) in etwas umwandeln, mit dem sie rechnen können.
   automatisch zu einem einzigen Token verschmolzen. Macht das Modell
   effizienter, weil häufige Wortteile weniger "Denkschritte" brauchen.
 
+## Installation
+
+```bash
+pip install git+https://github.com/RFOF-NETWORK/rfof-network.github.ton.git
+```
+
 ## Ausführen
 
 ```bash
@@ -60,6 +68,8 @@ python3 bpe_tokenizer.py
 python3 test_tokenizers.py
 python3 test_security_web3.py
 ```
+
+## Als Python-Paket nutzen
 
 ## Neue Module
 
@@ -70,19 +80,23 @@ python3 test_security_web3.py
 - `logging_utils.py`: zentrales Logging
 - `errors.py`: modulare Fehlerklassen
 
-## Nächste Schritte (in Termux)
 
-1. Termux öffnen (F-Droid-Version)
-2. `pkg install python git`
-3. Diesen Ordner nach Termux übertragen (z.B. per `git clone`, sobald
-   auf GitHub oder Hugging Face gepusht)
-4. Mit echten, großen Tokenizern vergleichen:
-   ```bash
-   pip install transformers
-   python3 -c "from transformers import AutoTokenizer; t = AutoTokenizer.from_pretrained('gpt2'); print(t.encode('Hallo Welt'))"
-   ```
-5. Als Hugging Face Space veröffentlichen (siehe Chat-Verlauf für
-   die genauen `huggingface-cli`-Befehle)
+```python
+from multi_spark_tokenizer_python_paket import CharTokenizer, BPETokenizer
+
+# Zeichen-Tokenizer
+tok = CharTokenizer()
+ids = tok.encode("Hallo Welt!")
+text = tok.decode(ids)
+print(ids)   # [32, 9, 22, 22, 25, 0, ...]
+print(text)  # 'Hallo Welt!'
+
+# BPE-Tokenizer
+bpe = BPETokenizer(anzahl_merges=20)
+bpe.trainieren("python python python lernen lernen")
+tokens = bpe.tokenisieren("python")
+print(tokens)  # ['python</w>']
+```
 
 ## Warum das der richtige erste Schritt ist
 
@@ -90,3 +104,8 @@ Bevor ein LLM irgendetwas "versteht", muss der Text erst in Zahlen
 umgewandelt werden. Dieses Projekt zeigt genau diesen ersten,
 fundamentalen Schritt - ganz ohne dass man ein riesiges Modell
 braucht oder trainieren muss.
+
+## Lizenz
+
+Siehe [PRAIAI_LICENSE](./PRAIAI_LICENSE)
+
