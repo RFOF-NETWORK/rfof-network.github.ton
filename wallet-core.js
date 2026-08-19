@@ -142,7 +142,8 @@ function onInteraction(feePaid = 0) {
     wcState.interactions++;
     wcState.liquidityPool += feePaid;
     const priceBase = wcState.interactions * PRICE_FACTOR;
-    ['RFOF','BTC','ETH','NEC','MTK'].forEach((c) => { wcState.prices[c] = priceBase; });
+    // BTC and ETH prices come from live CoinGecko feed – do not overwrite them
+    ['RFOF', 'NEC', 'MTK'].forEach((c) => { wcState.prices[c] = priceBase; });
     saveState(wcState);
     refreshPriceDisplay();
 }
@@ -241,9 +242,11 @@ const CURRENCY_SYMBOLS = {
 };
 
 function refreshPriceDisplay() {
-    const el = document.getElementById('wcPriceInfo');
-    if (el) {
-        el.textContent = `Interaktionen: ${wcState.interactions} | Pool: ${fmtNum(wcState.liquidityPool, 6)} | Preis/Unit: $${fmtNum(wcState.prices.RFOF, 4)}`;
+    const priceEl = document.getElementById('wcPriceInfo');
+    if (priceEl) {
+        const btcStr = wcState.prices.BTC > 0 ? `BTC: $${fmtNum(wcState.prices.BTC, 0)} | ` : '';
+        const ethStr = wcState.prices.ETH > 0 ? `ETH: $${fmtNum(wcState.prices.ETH, 0)} | ` : '';
+        priceEl.textContent = `${btcStr}${ethStr}RFOF: $${fmtNum(wcState.prices.RFOF, 4)} | Interaktionen: ${wcState.interactions} | Pool: ${fmtNum(wcState.liquidityPool, 6)}`;
     }
     refreshBalanceDisplay();
 }
@@ -503,15 +506,21 @@ let chartDataMap  = {};
 let chartIntervals = {};
 
 function buildCandleData(n = 50) {
+    return buildCandleDataFromPrice(n, null);
+}
+
+function buildCandleDataFromPrice(n = 50, basePrice = null) {
     const data = [];
-    let price = Math.random() * 0.1;
+    let price = basePrice !== null && basePrice > 0 ? basePrice : Math.random() * 0.1 + 0.0001;
+    const vol = basePrice !== null && basePrice > 1 ? 0.004 : 0.15;
+    const drift = basePrice !== null && basePrice > 1 ? price * 0.0002 : 0.0005;
     const now = Math.floor(Date.now() / 1000);
     for (let i = n; i >= 0; i--) {
         const o = price;
-        const delta = (Math.random() - 0.48) * price * 0.15 + 0.0005;
-        price = Math.max(0.0001, price + delta);
-        const h = Math.max(o, price) * (1 + Math.random() * 0.05);
-        const l = Math.min(o, price) * (1 - Math.random() * 0.05);
+        const delta = (Math.random() - 0.48) * price * vol + drift;
+        price = Math.max(price * 0.3, price + delta);
+        const h = Math.max(o, price) * (1 + Math.random() * 0.01);
+        const l = Math.min(o, price) * (1 - Math.random() * 0.01);
         data.push({ time: now - i * 60, open: o, high: h, low: l, close: price });
     }
     return data;
@@ -542,7 +551,9 @@ function initCharts(isAdminUser) {
             switchChart(c, chartEl, LC);
         });
         tabBar.appendChild(btn);
-        chartDataMap[c] = buildCandleData();
+        chartDataMap[c] = ['BTC', 'ETH'].includes(c)
+            ? buildCandleDataFromPrice(50, wcState.prices[c] > 0 ? wcState.prices[c] : null)
+            : buildCandleData();
     });
 
     switchChart(currencies[0], chartEl, LC);
@@ -590,9 +601,12 @@ function switchChart(currency, container, LC) {
         d.push(bar);
         if (d.length > 300) { d.shift(); }
         series.update(bar);
-        wcState.prices[currency] = close + wcState.interactions * PRICE_FACTOR;
-        saveState(wcState);
-        refreshBalanceDisplay();
+        // BTC and ETH prices are driven by live feed – only update internal currencies
+        if (!['BTC', 'ETH'].includes(currency)) {
+            wcState.prices[currency] = close + wcState.interactions * PRICE_FACTOR;
+            saveState(wcState);
+            refreshBalanceDisplay();
+        }
     }, 2000);
 
     // Buy/Sell buttons
@@ -667,6 +681,79 @@ function closeModal(id) {
     document.getElementById(id)?.classList.remove('open');
 }
 
+// ─── Live Prices (CoinGecko, 30 s) ───────────────────────────────────────────
+
+const LIVE_PRICE_INTERVAL_MS = 30_000;
+let _livePriceTimer = null;
+
+async function fetchLivePrices() {
+    try {
+        const resp = await fetch(
+            'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd'
+        );
+        if (!resp.ok) { return; }
+        const data = await resp.json();
+        let updated = false;
+        if (data.bitcoin && data.bitcoin.usd > 0) {
+            wcState.prices.BTC = data.bitcoin.usd;
+            updated = true;
+        }
+        if (data.ethereum && data.ethereum.usd > 0) {
+            wcState.prices.ETH = data.ethereum.usd;
+            updated = true;
+        }
+        if (updated) {
+            saveState(wcState);
+            refreshPriceDisplay();
+            // Append a live-price candle to BTC/ETH chart data maps
+            const nowSec = Math.floor(Date.now() / 1000);
+            ['BTC', 'ETH'].forEach((c) => {
+                const d = chartDataMap[c];
+                if (!d || !d.length) { return; }
+                const last = d[d.length - 1];
+                const lp = wcState.prices[c];
+                if (last.time < nowSec) {
+                    d.push({
+                        time: nowSec,
+                        open: last.close,
+                        high: Math.max(last.close, lp),
+                        low:  Math.min(last.close, lp),
+                        close: lp
+                    });
+                    if (d.length > 300) { d.shift(); }
+                }
+            });
+        }
+    } catch (_) {
+        // Network error: keep existing prices
+    }
+}
+
+function startLivePrices() {
+    if (_livePriceTimer) { return; }
+    fetchLivePrices();
+    _livePriceTimer = setInterval(fetchLivePrices, LIVE_PRICE_INTERVAL_MS);
+}
+
+// ─── Wallet Context (for AI Chat) ────────────────────────────────────────────
+
+window.rfofGetWalletContext = function () {
+    const wcAuth = new AuthManager();
+    const session = wcAuth.getSessionSummary();
+    return {
+        session,
+        wallet: {
+            balances: Object.assign({}, wcState.balances),
+            prices: Object.assign({}, wcState.prices),
+            interactions: wcState.interactions,
+            liquidityPool: wcState.liquidityPool,
+            mining: wcState.miningActive,
+            stakes: wcState.stakes.slice(),
+            txHistory: wcState.txHistory.slice(0, 20)
+        }
+    };
+};
+
 // ─── Nav-Status-Badge ─────────────────────────────────────────────────────────
 
 function refreshLoginBadge() {
@@ -686,6 +773,9 @@ function refreshLoginBadge() {
 // ─── Main Mount ───────────────────────────────────────────────────────────────
 
 function mount() {
+    // ── Live Prices (start once) ──
+    startLivePrices();
+
     // ── Login Badge ──
     const topNav = document.getElementById('topNav');
     if (topNav && !document.getElementById('wcLoginBadge')) {

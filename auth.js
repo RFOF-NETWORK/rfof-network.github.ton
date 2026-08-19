@@ -636,13 +636,26 @@ export class AuthManager {
     buildOAuthAuthorizationUrl(providerInput, options = {}) {
         const provider = normalizeOAuthProvider(providerInput);
         const {
-            clientId = `demo-${provider}-client`,
+            clientId = options.clientId || `demo-${provider}-client`,
             redirectUri = options.redirectUri || 'https://example.invalid/oauth/callback',
-            scope = 'openid profile email',
             state
         } = options;
+
+        const REAL_ENDPOINTS = {
+            github: 'https://github.com/login/oauth/authorize',
+            google: 'https://accounts.google.com/o/oauth2/v2/auth',
+            microsoft: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize'
+        };
+        const DEFAULT_SCOPES = {
+            github: 'read:user user:email',
+            google: 'openid profile email',
+            microsoft: 'openid profile email'
+        };
+
+        const endpoint = REAL_ENDPOINTS[provider] || `https://oauth.${provider}.com/authorize`;
+        const scope = options.scope || DEFAULT_SCOPES[provider] || 'openid profile email';
         const callbackState = state || this.createOAuthState(provider);
-        const endpoint = `https://oauth.${provider}.com/authorize`;
+
         const params = new URLSearchParams({
             client_id: clientId,
             redirect_uri: redirectUri,

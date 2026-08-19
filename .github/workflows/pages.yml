@@ -87,6 +87,13 @@ jobs:
           mkdir -p site/docs
           cp index.html site/index.html
           cp auth.js site/auth.js
+          cp wallet-core.js site/wallet-core.js
+          cp bip39_wordlist.js site/bip39_wordlist.js
+          cp mtk-nec-economy.js site/mtk-nec-economy.js
+          cp layer7-math.js site/layer7-math.js
+          cp justice-32-chapters.js site/justice-32-chapters.js
+          cp rbac.js site/rbac.js
+          cp ai-chat.js site/ai-chat.js
           cp README.md site/README.md
           cp DEPLOYMENT.md site/DEPLOYMENT.md
           cp SECURITY.md site/SECURITY.md
