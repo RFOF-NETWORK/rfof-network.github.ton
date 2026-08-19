@@ -85,6 +85,42 @@ function normalizeOAuthProvider(providerInput) {
     return provider;
 }
 
+function normalizeOauthStateStore(value) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+        return {};
+    }
+
+    const normalized = {};
+    Object.entries(value).forEach(([key, entry]) => {
+        if (!entry || typeof entry !== 'object') {
+            return;
+        }
+
+        try {
+            if (typeof entry.provider === 'string') {
+                normalized[String(key)] = {
+                    provider: normalizeOAuthProvider(entry.provider),
+                    createdAt: Number(entry.createdAt) || 0,
+                    expiresAt: Number(entry.expiresAt) || 0
+                };
+                return;
+            }
+
+            if (typeof entry.token === 'string') {
+                normalized[entry.token] = {
+                    provider: normalizeOAuthProvider(key),
+                    createdAt: Number(entry.createdAt) || 0,
+                    expiresAt: Number(entry.expiresAt) || 0
+                };
+            }
+        } catch {
+            // Ignoriere ungültige oder veraltete State-Einträge.
+        }
+    });
+
+    return normalized;
+}
+
 function buildOauthUsername(profile, provider, subject) {
     const candidates = [
         profile?.username,
@@ -259,11 +295,11 @@ export class AuthManager {
     }
 
     getOauthState() {
-        return safeJsonParse(this.storage.getItem(OAUTH_STATE_KEY), {});
+        return normalizeOauthStateStore(safeJsonParse(this.storage.getItem(OAUTH_STATE_KEY), {}));
     }
 
     saveOauthState(value) {
-        this.storage.setItem(OAUTH_STATE_KEY, JSON.stringify(value || {}));
+        this.storage.setItem(OAUTH_STATE_KEY, JSON.stringify(normalizeOauthStateStore(value)));
     }
 
     getSession() {
@@ -335,10 +371,11 @@ export class AuthManager {
         const provider = normalizeOAuthProvider(providerInput);
         const token = createCsrfToken(24);
         const oauthState = this.getOauthState();
-        oauthState[provider] = {
-            token,
+        const nowValue = this.now();
+        oauthState[token] = {
+            provider,
             createdAt: this.now(),
-            expiresAt: this.now() + (10 * 60 * 1000)
+            expiresAt: nowValue + (10 * 60 * 1000)
         };
         this.saveOauthState(oauthState);
         return token;
@@ -347,12 +384,26 @@ export class AuthManager {
     consumeOAuthState(providerInput, stateToken) {
         const provider = normalizeOAuthProvider(providerInput);
         const oauthState = this.getOauthState();
-        const current = oauthState[provider];
-        delete oauthState[provider];
-        this.saveOauthState(oauthState);
-        if (!current || current.expiresAt <= this.now() || current.token !== stateToken) {
+        const nowValue = this.now();
+        let updated = false;
+
+        Object.entries(oauthState).forEach(([token, entry]) => {
+            if (entry.expiresAt <= nowValue) {
+                delete oauthState[token];
+                updated = true;
+            }
+        });
+
+        const token = String(stateToken ?? '').trim();
+        const current = oauthState[token];
+        if (!current || current.provider !== provider) {
+            if (updated) {
+                this.saveOauthState(oauthState);
+            }
             throw new Error('OAuth2 Callback-State ungültig oder abgelaufen.');
         }
+        delete oauthState[token];
+        this.saveOauthState(oauthState);
         return true;
     }
 
@@ -481,19 +532,39 @@ export class AuthManager {
         const activeSession = this.getSession();
         const nowIsoValue = isoNow(this.now);
         const targetUsername = activeSession?.username || sanitizeUsername(profile.username) || sanitizeUsername(profile.email ? String(profile.email).split('@')[0] : '');
+        const linkedUsers = users
+            .map((entry, index) => ({ entry, index }))
+            .filter(({ entry }) => entry.oauthLinks?.[provider]?.subject === oauthSubject);
 
         let user = null;
         let userIndex = -1;
 
-        if (targetUsername) {
+        if (linkedUsers.length > 1) {
+            this._appendLog('OAUTH_LOGIN', 'failed', activeSession?.username || targetUsername || 'anonymous', `${provider} Konto mehrfach verknüpft`);
+            throw new Error('Dieses OAuth2-Konto ist mehrfach verknüpft. Bitte die Verknüpfungen bereinigen.');
+        }
+
+        if (activeSession?.username) {
             userIndex = users.findIndex((entry) => entry.username === targetUsername);
             if (userIndex >= 0) {
                 user = users[userIndex];
             }
         }
 
-        if (!user) {
-            userIndex = users.findIndex((entry) => entry.oauthLinks?.[provider]?.subject === oauthSubject);
+        if (linkedUsers.length === 1) {
+            const linkedUser = linkedUsers[0];
+            if (activeSession?.username && linkedUser.entry.username !== activeSession.username) {
+                this._appendLog('OAUTH_LOGIN', 'failed', activeSession.username, `${provider} Konto bereits mit ${linkedUser.entry.username} verknüpft`);
+                throw new Error('Dieses OAuth2-Konto ist bereits mit einem anderen Benutzer verknüpft.');
+            }
+            if (!user) {
+                user = linkedUser.entry;
+                userIndex = linkedUser.index;
+            }
+        }
+
+        if (!user && targetUsername) {
+            userIndex = users.findIndex((entry) => entry.username === targetUsername);
             if (userIndex >= 0) {
                 user = users[userIndex];
             }
