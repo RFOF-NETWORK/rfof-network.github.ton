@@ -792,6 +792,285 @@ export class AuthManager {
             secureNoteConfigured: Boolean(user?.secureNote)
         };
     }
+
+    // ─── 2FA ────────────────────────────────────────────────────────────────
+
+    generateTwoFACode() {
+        const digits = new Uint32Array(1);
+        getCryptoApi().getRandomValues(digits);
+        return String(digits[0] % 1_000_000).padStart(6, '0');
+    }
+
+    sendTwoFACode(contact, code) {
+        const channel = contact.includes('@') ? 'EMAIL' : 'SMS';
+        this._appendLog('2FA_SEND', 'success', 'system',
+            `${channel} → ${contact} | Code: ${code} (demo-mode)`);
+        return { channel, contact, code };
+    }
+
+    verifyTwoFACode(userCode, storedCode) {
+        if (!userCode || !storedCode) {
+            throw new Error('2FA-Code fehlt.');
+        }
+        if (String(userCode).trim() !== String(storedCode).trim()) {
+            throw new Error('2FA-Code ungültig oder abgelaufen.');
+        }
+        return true;
+    }
+
+    setupTwoFA(method, contact, csrfToken) {
+        const session = this._validateStateToken(csrfToken);
+        if (!['email', 'sms'].includes(method)) {
+            throw new Error('2FA-Methode muss "email" oder "sms" sein.');
+        }
+        if (!contact || contact.trim() === '') {
+            throw new Error('2FA-Kontaktdaten fehlen.');
+        }
+        const { users, index } = this._findUser(session.username);
+        const user = users[index];
+        user.twoFA = {
+            enabled: true,
+            method,
+            contact: contact.trim(),
+            updatedAt: isoNow(this.now)
+        };
+        user.updatedAt = isoNow(this.now);
+        users[index] = user;
+        this.saveUsers(users);
+        this._appendLog('2FA_SETUP', 'success', user.username, `Methode: ${method}`);
+        return user.twoFA;
+    }
+
+    disableTwoFA(csrfToken) {
+        const session = this._validateStateToken(csrfToken);
+        const { users, index } = this._findUser(session.username);
+        const user = users[index];
+        user.twoFA = { enabled: false, method: null, contact: null, updatedAt: isoNow(this.now) };
+        user.updatedAt = isoNow(this.now);
+        users[index] = user;
+        this.saveUsers(users);
+        this._appendLog('2FA_DISABLE', 'success', user.username, '2FA deaktiviert');
+        return user.twoFA;
+    }
+
+    changeTwoFAMethod(newMethod, newContact, csrfToken) {
+        return this.setupTwoFA(newMethod, newContact, csrfToken);
+    }
+
+    getTwoFASettings(csrfToken) {
+        const session = this._validateStateToken(csrfToken);
+        const user = this.getUser(session.username);
+        return user?.twoFA || { enabled: false, method: null, contact: null };
+    }
+
+    // ─── Forgot-Password / Recovery ─────────────────────────────────────────
+
+    initiateForgotPassword(emailOrPhone) {
+        const users = this.getUsers();
+        const user = users.find(
+            (u) => u.contactEmail === emailOrPhone || u.contactPhone === emailOrPhone
+        );
+        if (!user) {
+            // Deliberate vague response to prevent user enumeration
+            this._appendLog('FORGOT_PASSWORD', 'info', 'anonymous',
+                `Recovery requested for unknown contact: ${emailOrPhone}`);
+            return { sent: true };
+        }
+        const code = this.generateTwoFACode();
+        const { users: allUsers, index } = this._findUser(user.username);
+        allUsers[index].recoveryCode = code;
+        allUsers[index].recoveryCodeExpires = this.now() + 5 * 60 * 1000;
+        this.saveUsers(allUsers);
+        this.sendTwoFACode(emailOrPhone, code);
+        this._appendLog('FORGOT_PASSWORD', 'success', user.username, 'Recovery-Code versandt');
+        return { sent: true };
+    }
+
+    verifyRecoveryCode(emailOrPhone, code) {
+        const users = this.getUsers();
+        const user = users.find(
+            (u) => u.contactEmail === emailOrPhone || u.contactPhone === emailOrPhone
+        );
+        if (!user || !user.recoveryCode) {
+            throw new Error('Kein aktiver Recovery-Code gefunden.');
+        }
+        if (this.now() > (user.recoveryCodeExpires || 0)) {
+            throw new Error('Recovery-Code abgelaufen.');
+        }
+        if (String(code).trim() !== String(user.recoveryCode).trim()) {
+            this._appendLog('RECOVERY_VERIFY', 'failed', user.username, 'Falscher Recovery-Code');
+            throw new Error('Recovery-Code ungültig.');
+        }
+        const verifyToken = createCsrfToken(16);
+        const { users: allUsers, index } = this._findUser(user.username);
+        allUsers[index].recoveryVerifyToken = verifyToken;
+        allUsers[index].recoveryVerifyExpires = this.now() + 5 * 60 * 1000;
+        this.saveUsers(allUsers);
+        this._appendLog('RECOVERY_VERIFY', 'success', user.username, 'Code verifiziert');
+        return { verifyToken, username: user.username };
+    }
+
+    async resetPasswordWithRecoveryCode(emailOrPhone, recoveryToken, newPassword, confirmPassword) {
+        if (newPassword !== confirmPassword) {
+            throw new Error('Passwörter stimmen nicht überein.');
+        }
+        const strength = passwordStrength(newPassword);
+        if (!strength.valid) {
+            throw new Error('Neues Passwort erfüllt die Anforderungen nicht.');
+        }
+        const users = this.getUsers();
+        const user = users.find(
+            (u) => u.contactEmail === emailOrPhone || u.contactPhone === emailOrPhone
+        );
+        if (!user || user.recoveryVerifyToken !== recoveryToken) {
+            throw new Error('Ungültiger Wiederherstellungs-Token.');
+        }
+        if (this.now() > (user.recoveryVerifyExpires || 0)) {
+            throw new Error('Wiederherstellungs-Token abgelaufen.');
+        }
+        const { users: allUsers, index } = this._findUser(user.username);
+        const nextSalt = createSalt(16);
+        const nextHashes = await doubleHashPassword(newPassword, nextSalt);
+        allUsers[index].salt = nextSalt;
+        allUsers[index].passwordHash = nextHashes.sha512;
+        allUsers[index].hashAlgorithm = nextHashes.algorithm;
+        allUsers[index].recoveryCode = null;
+        allUsers[index].recoveryCodeExpires = null;
+        allUsers[index].recoveryVerifyToken = null;
+        allUsers[index].recoveryVerifyExpires = null;
+        allUsers[index].updatedAt = isoNow(this.now);
+        this.saveUsers(allUsers);
+        this._appendLog('PASSWORD_RESET', 'success', user.username, 'Passwort zurückgesetzt');
+        return { success: true, username: user.username };
+    }
+
+    // ─── Settings / Profile ──────────────────────────────────────────────────
+
+    updateUsername(newUsernameRaw, csrfToken) {
+        const session = this._validateStateToken(csrfToken);
+        const newUsername = sanitizeUsername(newUsernameRaw);
+        if (!newUsername) {
+            throw new Error('Neuer Benutzername ungültig.');
+        }
+        const { users, index } = this._findUser(session.username);
+        if (users.some((u) => u.username === newUsername)) {
+            throw new Error('Benutzername bereits vergeben.');
+        }
+        const user = users[index];
+        const oldUsername = user.username;
+        user.username = newUsername;
+        user.updatedAt = isoNow(this.now);
+        users[index] = user;
+        this.saveUsers(users);
+        // Update session
+        const currentSession = this.getSession();
+        if (currentSession) {
+            this.storage.setItem(SESSION_KEY, JSON.stringify({
+                ...currentSession,
+                username: newUsername
+            }));
+        }
+        this._appendLog('USERNAME_CHANGE', 'success', newUsername,
+            `Vorheriger Name: ${oldUsername}`);
+        return user;
+    }
+
+    updateContactInfo(email, phone, csrfToken) {
+        const session = this._validateStateToken(csrfToken);
+        const { users, index } = this._findUser(session.username);
+        const user = users[index];
+        if (email !== undefined) {
+            user.contactEmail = String(email).trim();
+        }
+        if (phone !== undefined) {
+            user.contactPhone = String(phone).trim();
+        }
+        user.updatedAt = isoNow(this.now);
+        users[index] = user;
+        this.saveUsers(users);
+        this._appendLog('CONTACT_UPDATE', 'success', user.username, 'Kontaktdaten aktualisiert');
+        return { contactEmail: user.contactEmail, contactPhone: user.contactPhone };
+    }
+
+    exportSeedPhrase(csrfToken) {
+        const session = this._validateStateToken(csrfToken);
+        const user = this.getUser(session.username);
+        if (!user.seedPhrase) {
+            // Generate deterministic demo seed phrase from username hash stored on first call
+            const words = [
+                'abandon', 'ability', 'able', 'about', 'above', 'absent',
+                'absorb', 'abstract', 'absurd', 'abuse', 'access', 'accident'
+            ];
+            const { users, index } = this._findUser(session.username);
+            users[index].seedPhrase = words.join(' ');
+            users[index].updatedAt = isoNow(this.now);
+            this.saveUsers(users);
+            this._appendLog('SEED_EXPORT', 'success', session.username, '12-Wort Seed generiert');
+            return words.join(' ');
+        }
+        this._appendLog('SEED_EXPORT', 'success', session.username, 'Seed-Phrase abgerufen');
+        return user.seedPhrase;
+    }
+
+    getConnectedProviders(csrfToken) {
+        const session = this._validateStateToken(csrfToken);
+        const user = this.getUser(session.username);
+        return Object.keys(user?.oauthLinks || {});
+    }
+
+    unlinkOAuth2Account(providerInput, csrfToken) {
+        const session = this._validateStateToken(csrfToken);
+        const provider = normalizeOAuthProvider(providerInput);
+        const { users, index } = this._findUser(session.username);
+        const user = users[index];
+        if (!user.oauthLinks?.[provider]) {
+            throw new Error(`Kein ${provider}-Account verknüpft.`);
+        }
+        delete user.oauthLinks[provider];
+        user.updatedAt = isoNow(this.now);
+        users[index] = user;
+        this.saveUsers(users);
+        this._appendLog('OAUTH_UNLINK', 'success', user.username, `${provider} getrennt`);
+        return user.oauthLinks;
+    }
+
+    // ─── Navigation helpers (frontend routing) ───────────────────────────────
+
+    navigateToHome() {
+        const session = this.getSession();
+        if (!session) {
+            throw new Error('Nicht eingeloggt. Bitte zuerst anmelden.');
+        }
+        return { view: 'home', username: session.username };
+    }
+
+    navigateToProfile() {
+        const session = this.getSession();
+        if (!session) {
+            throw new Error('Nicht eingeloggt. Bitte zuerst anmelden.');
+        }
+        return { view: 'profile', username: session.username };
+    }
+
+    navigateToExplorer() {
+        const session = this.getSession();
+        if (!session) {
+            throw new Error('Nicht eingeloggt. Bitte zuerst anmelden.');
+        }
+        return { view: 'explorer', username: session.username };
+    }
+
+    navigateToAdminPanel() {
+        const session = this.getSession();
+        if (!session) {
+            throw new Error('Nicht eingeloggt. Bitte zuerst anmelden.');
+        }
+        if (session.role !== 'admin') {
+            this._appendLog('ADMIN_ACCESS', 'denied', session.username, 'Kein Admin');
+            throw new Error('Zugriff verweigert. Nur für Administratoren.');
+        }
+        return { view: 'admin', username: session.username };
+    }
 }
 
 export const authConfig = {
