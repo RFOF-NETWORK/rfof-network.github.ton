@@ -12,7 +12,7 @@ const SESSION_TIMEOUT_MS = 15 * 60 * 1000;
 const LOCKOUT_MS = 15 * 60 * 1000;
 const MAX_FAILED_ATTEMPTS = 5;
 const LOG_LIMIT = 200;
-const CHAT_HISTORY_LIMIT = 120;
+const CHAT_HISTORY_ENTRY_LIMIT = 120;
 const USER_CHAT_DAILY_MESSAGE_LIMIT = 40;
 const USER_CHAT_DAILY_TOKEN_LIMIT = 12_000;
 const USER_CHAT_INPUT_CHAR_LIMIT = 1_200;
@@ -541,13 +541,13 @@ export class AuthManager {
         }
 
         const inputTokens = estimateTokenCount(message);
-        if (!quota.unlimited && (usage.tokenCount + inputTokens) > quota.dailyTokenLimit) {
+        const assistantText = this._generatePraiaiResponse(message, session);
+        const outputTokens = estimateTokenCount(assistantText);
+        const totalTokens = inputTokens + outputTokens;
+        if (!quota.unlimited && (usage.tokenCount + totalTokens) > quota.dailyTokenLimit) {
             this._appendLog('PRAIAI_CHAT', 'denied', session.username, 'Token-Limit erreicht');
             throw new Error('Tageslimit für Tokens erreicht.');
         }
-
-        const assistantText = this._generatePraiaiResponse(message, session);
-        const outputTokens = estimateTokenCount(assistantText);
         const chatStore = this.getChatStore();
         const current = Array.isArray(chatStore[session.username]) ? chatStore[session.username] : [];
         const nowIsoValue = isoNow(this.now);
@@ -565,13 +565,13 @@ export class AuthManager {
                 tokens: outputTokens
             }
         );
-        chatStore[session.username] = current.slice(-CHAT_HISTORY_LIMIT);
+        chatStore[session.username] = current.slice(-CHAT_HISTORY_ENTRY_LIMIT);
         this.saveChatStore(chatStore);
 
         usage.messageCount += 1;
-        usage.tokenCount += (inputTokens + outputTokens);
+        usage.tokenCount += totalTokens;
         this._saveUsageRecord(session.username, usage);
-        this._appendLog('PRAIAI_CHAT', 'success', session.username, `Nachricht verarbeitet (+${inputTokens + outputTokens} Tokens)`);
+        this._appendLog('PRAIAI_CHAT', 'success', session.username, `Nachricht verarbeitet (+${totalTokens} Tokens)`);
         this._runSilentAutonomy(session, message, assistantText);
 
         return {
@@ -588,7 +588,7 @@ export class AuthManager {
                 Array.isArray(events)
                     ? events.map((entry) => ({ username, ...entry }))
                     : []
-            ));
+            )).sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
         }
         return (Array.isArray(autonomyStore[session.username]) ? autonomyStore[session.username] : []).map((entry) => ({ ...entry }));
     }
@@ -1315,7 +1315,7 @@ export const authConfig = {
     sessionTimeoutMs: SESSION_TIMEOUT_MS,
     lockoutMs: LOCKOUT_MS,
     maxFailedAttempts: MAX_FAILED_ATTEMPTS,
-    chatHistoryLimit: CHAT_HISTORY_LIMIT,
+    chatHistoryEntryLimit: CHAT_HISTORY_ENTRY_LIMIT,
     userChatDailyMessageLimit: USER_CHAT_DAILY_MESSAGE_LIMIT,
     userChatDailyTokenLimit: USER_CHAT_DAILY_TOKEN_LIMIT,
     userChatInputCharLimit: USER_CHAT_INPUT_CHAR_LIMIT

@@ -794,7 +794,7 @@
     </div>
 
     <!-- ──────────────────────────────────────────────────────────────────── -->
-    <!-- ── Wallet Section ────────────────────────────────────────────────── -->
+    <!-- ── Chat Section ──────────────────────────────────────────────────── -->
     <section id="chatSection" class="panel" style="display:none;margin-top:24px;">
         <h2>🤖 PRAIAI Chat</h2>
         <p>Lokaler Chat-Flow mit Rollen-Quota (Admin unbegrenzt, User mit Tageslimit) und stiller Autonomie-Erkennung.</p>
@@ -1293,7 +1293,7 @@
                     ? 'Unbegrenzt (Admin)'
                     : `${usage.remainingMessages} Nachrichten / ${usage.remainingTokens} Tokens übrig`;
                 elements.chatAutonomyHint.textContent = autonomyEvents.length
-                    ? `Silent-Autonomy: ${autonomyEvents[0].summary || autonomyEvents[0].topic}`
+                    ? `Silent-Autonomy: ${autonomyEvents[0].username ? `${autonomyEvents[0].username} · ` : ''}${autonomyEvents[0].summary || autonomyEvents[0].topic}`
                     : 'Silent-Autonomy: keine aktuellen Signale.';
             }
             elements.userStats.textContent = `${users.length} Nutzer insgesamt.`;
@@ -1549,7 +1549,11 @@
         elements.chatForm?.addEventListener('submit', (event) => {
             event.preventDefault();
             withLoading(elements.chatSendButton, async () => {
-                auth.sendChatMessage(elements.chatInput.value, elements.noteCsrf.value);
+                const session = auth.getSessionSummary();
+                if (!session?.csrfToken) {
+                    throw new Error('Keine aktive Session für Chat vorhanden.');
+                }
+                auth.sendChatMessage(elements.chatInput.value, session.csrfToken);
                 elements.chatInput.value = '';
                 renderSession();
             });
