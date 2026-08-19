@@ -1652,7 +1652,9 @@
                         showBanner('error', 'Clipboard API nicht verfügbar.');
                         return;
                     }
-                    writePromise.then(() => showBanner('success', 'Adresse kopiert!'));
+                    writePromise
+                        .then(() => showBanner('success', 'Adresse kopiert!'))
+                        .catch(() => showBanner('error', 'Adresse konnte nicht kopiert werden.'));
                 });
                 content.append(intro, address, copyButton);
             } else if (cfg.mining) {
