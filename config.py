@@ -7,7 +7,10 @@ import os
 
 from dotenv import load_dotenv
 
-from errors import ConfigError
+if __package__:
+    from .errors import ConfigError
+else:
+    from errors import ConfigError
 
 
 @dataclass(frozen=True)

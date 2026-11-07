@@ -9,7 +9,10 @@ import os
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
-from errors import CryptoError
+if __package__:
+    from .errors import CryptoError
+else:
+    from errors import CryptoError
 
 
 def hash_sha256(text: str) -> str:

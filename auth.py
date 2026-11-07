@@ -8,8 +8,12 @@ from urllib.parse import urlencode
 
 import jwt
 
-from crypto_utils import hash_password, verify_password
-from errors import AuthError
+if __package__:
+    from .crypto_utils import hash_password, verify_password
+    from .errors import AuthError
+else:
+    from crypto_utils import hash_password, verify_password
+    from errors import AuthError
 
 
 @dataclass(frozen=True)

@@ -7,7 +7,10 @@ from dataclasses import dataclass
 from eth_account import Account
 from web3 import HTTPProvider, Web3
 
-from errors import Web3IntegrationError
+if __package__:
+    from .errors import Web3IntegrationError
+else:
+    from errors import Web3IntegrationError
 
 
 @dataclass(frozen=True)
