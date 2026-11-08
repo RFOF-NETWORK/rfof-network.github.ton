@@ -79,7 +79,7 @@ jobs:
           text = open('index.html', encoding='utf-8').read()
           if 'innerHTML' in text:
               raise SystemExit('innerHTML usage detected in index.html')
-          match = re.search(r'<script type="module">([\s\S]*?)</script>\s*</body>', text)
+          match = re.search(r'<script\s+type="module"\s*>([\s\S]*?)</script>', text)
           if not match:
               raise SystemExit('No inline module script found in index.html')
           with tempfile.NamedTemporaryFile('w', suffix='.mjs', delete=False, encoding='utf-8') as handle:
